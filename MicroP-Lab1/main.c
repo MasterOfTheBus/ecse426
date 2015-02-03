@@ -68,9 +68,9 @@ int main()
 	ex->a = 10;
 	ex->b = 4;
 	ex->c = 2;
-	int input[] = {5, 10, 15};
-	int output[3];
-	exampleFilter(input, output, ex, 3);
+	//int input[] = {5, 10, 15};
+	//int output[3];
+	//exampleFilter(input, output, ex, 3);
 	
 	return 0;
 }
