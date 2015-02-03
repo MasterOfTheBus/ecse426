@@ -1,6 +1,13 @@
 #include <stdio.h>
 //#include "arm_math.h" // may have to add the rest of the base project components
 
+#if 1
+#include "test.h"
+#endif
+
+#define c 0
+#define as 1
+
 //typedef signed long int32_t;
 
 typedef struct kalman_state kalman_state;
@@ -12,9 +19,10 @@ struct kalman_state {
 	float k; // adaptive Kalman filter gain
 };
 
-int Kalmanfilter_C(float* InputArray, float* OutputArray, kalman_state* kstate, int Length);
+extern int Kalmanfilter_asm(float* InputArray, float* OutputArray, int Length, kalman_state* kstate);
+int Kalmanfilter_C(float* InputArray, float* OutputArray, int Length, kalman_state* kstate);
 
-int Kalmanfilter_C (float* InputArray, float* OutputArray, kalman_state* kstate, int Length) {
+int Kalmanfilter_C (float* InputArray, float* OutputArray, int Length, kalman_state* kstate) {
 	int i = 0;
 	while (i < Length) {
 		kstate->p = kstate->p + kstate->q;
@@ -29,28 +37,24 @@ int Kalmanfilter_C (float* InputArray, float* OutputArray, kalman_state* kstate,
 
 int main()
 {
+	float output[length];
 	
-	float input[3];
-	float output[3];
-	int length = 3;
 	kalman_state kstate;
 	kstate.q = 0.1;
 	kstate.r = 0.1;
+	kstate.x = testArray[0];
 	kstate.p = 0.1;
 	kstate.k = 0;
-	kstate.x = 0;
-	
-	input[0] = 1.0;
-	input[1] = 1.2;
-	input[2] = 1.4;
-	
-	kstate.x = input[0];
 	
 	// calling the assembly
-	
+#if as
+	Kalmanfilter_asm(testArray, output, length, &kstate);
+#endif
 	// calling the c
-	Kalmanfilter_C(input, output, &kstate, length);
-
+#if c
+	Kalmanfilter_C(testArray, output, length, &kstate);
+#endif
+	
 	return 0;
 }
 
