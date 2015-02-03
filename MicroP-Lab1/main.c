@@ -47,6 +47,11 @@ int exampleFilter(int* input, int* output, example* exState, int length) {
 
 int main()
 {
+	int input[3];
+	int output[3];
+	/*
+	float input[3];
+	float output[3];*/
 	/*kalman_state* kstate;
 	kstate->q = 0.1;
 	kstate->r = 0.1;
@@ -68,9 +73,10 @@ int main()
 	ex->a = 10;
 	ex->b = 4;
 	ex->c = 2;
-	//int input[] = {5, 10, 15};
-	//int output[3];
-	//exampleFilter(input, output, ex, 3);
+	input[0] = 5;
+	input[1] = 10;
+	input[2] = 15;
+	exampleFilter(input, output, ex, 3);
 	
 	return 0;
 }
