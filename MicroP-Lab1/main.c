@@ -50,9 +50,11 @@ int main()
 	kstate.q = 0.1;
 	kstate.r = 0.1;
 	kstate.x = testVector[0];
+
 	kstate.p = 0.1;
 	kstate.k = 0;
-	
+	kstate.x = 0;
+
 	// calling the assembly
 #if as
 	Kalmanfilter_asm(output, testVector, length, &kstate);
@@ -61,7 +63,7 @@ int main()
 #if c
 	Kalmanfilter_C(testVector, output, length, &kstate);
 #endif
-	
+
 	return 0;
 }
 
