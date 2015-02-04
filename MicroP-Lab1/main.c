@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <math.h>
 //#include "arm_math.h" // may have to add the rest of the base project components
 
 #if 0
@@ -9,8 +8,11 @@
 #include "test.h"
 #endif
 
-#define c 0
-#define as 1
+#define c 1
+#define as 0
+
+#define custom 1
+#define library 0
 
 //typedef signed long int32_t;
 
@@ -50,10 +52,8 @@ int main()
 	kstate.q = 0.1;
 	kstate.r = 0.1;
 	kstate.x = testVector[0];
-
 	kstate.p = 0.1;
 	kstate.k = 0;
-	kstate.x = 0;
 
 	// calling the assembly
 #if as
