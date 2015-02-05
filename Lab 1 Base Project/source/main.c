@@ -2,9 +2,9 @@
 #include <stdlib.h>
 #include "arm_math.h" // may have to add the rest of the base project components
 
-#define demo 1
+#define demo 0
 #define assembly 0
-#define custom 0
+#define custom 1
 
 #if demo
 #include "array.h"
@@ -33,7 +33,6 @@ void findConvolution(float* vectorA, float* vectorB, float* convolution, int len
 
 int Kalmanfilter_C (float* InputArray, float* OutputArray, int Length, kalman_state* kstate) {
 	int i = 0;
-	float test = 0.0;
 	while (i < Length) {
 		kstate->p = kstate->p + kstate->q;
 		kstate->k = kstate->p / (kstate->p + kstate->r);
@@ -43,7 +42,6 @@ int Kalmanfilter_C (float* InputArray, float* OutputArray, int Length, kalman_st
 			return 1;
 		}
 		kstate->p = (1 - kstate->k) * kstate->p;
-		test = kstate->x;
 		OutputArray[i] = kstate->x;
 		i++;
 	}
@@ -58,13 +56,13 @@ void subtractVectors(float* vectorA, float* vectorB, float* difference, int leng
 	}
 }
 
-void average(float* vector, int length, float* average) {
+void average(float* vector, int length, float* avg) {
 	int i = 0;
 	while (i < length) {
-		*average += vector[i];
+		*avg += vector[i];
 		i++;
 	}
-	*average /= length;
+	*avg /= length;
 }
 
 void standardDeviation(float* vector, int length, float* std_dev) {
@@ -116,10 +114,10 @@ int main()
 	
 	// for part III
 	float difference[length];
-	float average;
+	float avg;
 	float std_dev;
-	float correlation;
-	float convolution;
+	float correlation[2 * length - 2];
+	float convolution[2 * length - 2];
 	
 	kalman_state kstate;
 	kstate.q = 0.1;
@@ -140,28 +138,42 @@ int main()
 		printf("%f\n", output[i]);
 	}
 
-#if 0
 #if custom
 	subtractVectors(testVector, output, difference, length);
 	
-	average(difference, length, &average);
+	average(difference, length, &avg);
 	standardDeviation(difference, length, &std_dev);
 	
-	findCorrelation(testVector, output, &correlation, length);
+	findCorrelation(testVector, output, correlation, length);
 	
-	findConvolution(testVector, output, &convolution, length);
+	findConvolution(testVector, output, convolution, length);
 #else
 	arm_sub_f32(testVector, output, difference, length);
 	
-	arm_mean_f32(difference, length, &average);
+	arm_mean_f32(difference, length, &avg);
 	
 	arm_std_f32(difference, length, &std_dev);
 	
-	arm_correlate_f32(testVector, length, output, length, &correlation);
+	arm_correlate_f32(testVector, length, output, length, correlation);
 	
-	arm_conv_f32(testVector, length, output, length, &convolution);
+	arm_conv_f32(testVector, length, output, length, convolution);
 #endif
-#endif
+
+i = 0;
+for (; i < length; i++) {
+	printf("%f ", difference[i]);
+}
+printf("%f\n", avg);
+printf("%f\n", std_dev);
+
+i = 0;
+for (; i < 2 * length - 2; i++) {
+	printf("%f ", correlation[i]);
+}
+i = 0;
+for (; i < 2 * length - 2; i++) {
+	printf("%f ", convolution[i]);
+}
 
 	return 0;
 }
