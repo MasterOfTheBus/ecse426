@@ -1,10 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "arm_math.h" // may have to add the rest of the base project components
+#include "arm_math.h"
 
-#define demo 0
-#define assembly 0
-#define custom 1
+#define demo 1
+#define assembly 1
+#define print 0
 
 #if demo
 #include "array.h"
@@ -79,36 +79,41 @@ void standardDeviation(float* vector, int length, float* std_dev) {
 
 void findCorrelation(float* vectorA, float* vectorB, float* correlation, int length) {
 	int i = 0;
-	int resultLength = 2 * length - 2;
-	while (i < resultLength) {
-		int j = 0;
-		while (j < length) {
-			int addition = vectorA[j];
-			int bInd = abs(j - i);
-			addition *= ((bInd >= length) ? 0 : vectorB[bInd]);
-			correlation[i] += addition;
-		}
+	while (i < length/2) {
+		float temp = vectorB[length - i - 1];
+		vectorB[length - i - 1] = vectorB[i];
+		vectorB[i] = temp;
+		i++;
+	}
+	findConvolution(vectorA, vectorB, correlation, length);
+	i = 0;
+	while (i < length/2) {
+		float temp = vectorB[length - i - 1];
+		vectorB[length - i - 1] = vectorB[i];
+		vectorB[i] = temp;
+		i++;
 	}
 }
 
 void findConvolution(float* vectorA, float* vectorB, float* convolution, int length) {
-	int i = 0;
+	int n = 0;
 	int resultLength = length + length - 2;
-	while (i < resultLength) {
-		int j = 0;
-		while (j < length) {
-			int addition = vectorA[j];
-			int bInd = abs(i - j);
-			addition *= ((bInd >= length) ? 0 : vectorB[bInd]);
-			convolution[i] += addition;
+	
+	while (n < resultLength) {
+		int k = 0;
+		convolution[n] = 0.0;
+		while (k < length) {
+			convolution[n] += vectorA[k] * (((n -k) < 0 || (n - k) >= length) ? 0 : vectorB[n-k]);
+			k++;
 		}
+		n++;
 	}
 }
 
 int main()
 {
 #if demo
-	int length = 75;//1257;
+	int length = 1257;
 #endif
 	float output[length];
 	
@@ -120,60 +125,85 @@ int main()
 	float convolution[2 * length - 2];
 	
 	kalman_state kstate;
-	kstate.q = 0.1;
-	kstate.r = 0.1;
-	kstate.x = testVector[0];
-	kstate.p = 0.1;
-	kstate.k = 0;
+	kstate.q = 0.005;
+	kstate.r = 5.0;
+	kstate.x = 0.0;
+	kstate.p = 0.0;
+	kstate.k = 0.0;
 
 #if assembly
 	// calling the assembly
 	Kalmanfilter_asm(output, testVector, length, &kstate);
 #else
 	// calling the c
-	Kalmanfilter_C(testVector, output, length, &kstate);
-#endif
-	int i = 0;
-	for (; i< length; i++) {
-		printf("%f\n", output[i]);
+	if (Kalmanfilter_C(testVector, output, length, &kstate) == 1) {
+		printf("Bad calculation\n");
 	}
+#endif
 
-#if custom
+#if print
+int i = 0;
+while (i < length) {
+printf("%f\n", output[i]);
+	i++;
+}
+#endif
+
 	subtractVectors(testVector, output, difference, length);
-	
 	average(difference, length, &avg);
 	standardDeviation(difference, length, &std_dev);
-	
 	findCorrelation(testVector, output, correlation, length);
-	
 	findConvolution(testVector, output, convolution, length);
-#else
-	arm_sub_f32(testVector, output, difference, length);
-	
-	arm_mean_f32(difference, length, &avg);
-	
-	arm_std_f32(difference, length, &std_dev);
-	
-	arm_correlate_f32(testVector, length, output, length, correlation);
-	
-	arm_conv_f32(testVector, length, output, length, convolution);
+
+#if print
+i = 0;
+while (i < length) {
+printf("%f - %f = %f\n", testVector[i], output[i], difference[i]);
+	i++;
+}
+
+	printf("avg: %f\n", avg);
+printf("std_dev: %f\n", std_dev);
+
+i = 0;
+while (i < 2 * length - 2) {
+	printf("correlation: %f\n", correlation[i]);
+	i++;
+}
+i = 0;
+while (i < 2 * length - 2) {
+	printf("convolution: %f\n", convolution[i]);
+	i++;
+}
 #endif
 
-i = 0;
-for (; i < length; i++) {
-	printf("%f ", difference[i]);
-}
-printf("%f\n", avg);
-printf("%f\n", std_dev);
+printf("\n\n\n");
+	arm_sub_f32(testVector, output, difference, length);
+	arm_mean_f32(difference, length, &avg);
+	arm_std_f32(difference, length, &std_dev);	
+	arm_correlate_f32(testVector, length, output, length, correlation);
+	arm_conv_f32(testVector, length, output, length, convolution);
 
+#if print
 i = 0;
-for (; i < 2 * length - 2; i++) {
-	printf("%f ", correlation[i]);
-}
-i = 0;
-for (; i < 2 * length - 2; i++) {
-	printf("%f ", convolution[i]);
+while (i < length) {
+printf("%f - %f = %f\n", testVector[i], output[i], difference[i]);
+	i++;
 }
 
+	printf("avg: %f\n", avg);
+printf("std_dev: %f\n", std_dev);
+
+i = 0;
+while (i < 2 * length - 2) {
+	printf("correlation: %f\n", correlation[i]);
+	i++;
+}
+i = 0;
+while (i < 2 * length - 2) {
+	printf("convolution: %f\n", convolution[i]);
+	i++;
+}
+#endif
 	return 0;
 }
