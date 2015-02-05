@@ -3,13 +3,13 @@
 Kalmanfilter_asm
 		; ***When calling the subroutine from C, remove steps 1 and 2!
 		; Step 1* - Set the array length and the address where the output will be stores
-		MOV R2, #1257 ; array length
+		;MOV R2, #1257 ; array length
 		;MOV R2, #2
-		MOV R0, #0x20000000 ; store the output here
+		;MOV R0, #0x20000000 ; store the output here
 		
 		; Step 2* - Find the Kalman Filter state variables and input data in memory
-		LDR R3, =qrxpk
-		LDR R1, =indata
+		;LDR R3, =qrxpk
+		;LDR R1, =indata
 		
 		; Step 3 - Store Kalman Filter state variables in their respective registers
 		VLDR S1, [R3]		; q
