@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include "arm_math.h"
 
+// use these to change testing parameters
 #define demo 0
 #define assembly 1
 #define print 1

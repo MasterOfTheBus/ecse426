@@ -4,5 +4,8 @@ Listings
 Lab\ 1\ Base\ Project/listings
 KalmanFilter.uvguix.TQ
 KalmanFilter.uvoptx
-*uv*
 *.dep
+MicroP-Lab1/*uv*
+*guix*
+*.bak
+*.uvoptx
