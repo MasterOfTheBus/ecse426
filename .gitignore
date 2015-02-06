@@ -1,7 +1,5 @@
 Objects
-Lab\ 1\ Base\ Project/object
 Listings
-Lab\ 1\ Base\ Project/listings
 KalmanFilter.uvguix.TQ
 KalmanFilter.uvoptx
 *.dep
@@ -9,3 +7,5 @@ MicroP-Lab1/*uv*
 *guix*
 *.bak
 *.uvoptx
+*object*
+
