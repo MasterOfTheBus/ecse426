@@ -5,8 +5,8 @@
 // use these to change testing parameters
 #define demo 1
 #define assembly 1
-#define print 0
-#define printOutput 1
+#define print 0 // print the statistics functions
+#define printOutput 1 // print the output
 
 #if demo
 #include "array.h"
@@ -55,7 +55,6 @@ void subtractVectors(float* vectorA, float* vectorB, float* difference, int leng
 	int i = 0;
 	while (i < length) {
 		difference[i] = vectorA[i] - vectorB[i];
-		//printf("%f\n", difference[i]);
 		i++;
 	}
 }
@@ -81,6 +80,10 @@ void standardDeviation(float* vector, int length, float* std_dev) {
 	arm_sqrt_f32(((sumOfSquares - (sum * sum) / length) / (length - 1)), std_dev);
 }
 
+/*
+ * Both the commented and non commented code does not match with the CMSIS-DSP correlation function
+ * However, both get the same value
+ */
 void findCorrelation(float* vectorA, float* vectorB, float* correlation, int length) {
 	// invert vectorB and simply pass to convolution
 	// will be slower than calculating indices for array
@@ -136,6 +139,7 @@ void findConvolution(float* vectorA, float* vectorB, float* convolution, int len
 }
 
 // for part III
+// declaring in main did not allocate memory for the variables
 	float difference[1257];
 	float avg;
 	float std_dev;
@@ -179,7 +183,7 @@ int main()
 
 	//------------------------------------------------------------------------
 	// implemented statistics functions
-	// the output is separated because for some reason the arm library was printing a different value when printing
+	// the output is separated because the arm library was printing a different value when printing
 	// in a block at the end
 	subtractVectors(testVector, output, difference, length);
 
