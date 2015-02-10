@@ -2,7 +2,11 @@
 #include "stm32f4xx.h"                  // Device header
 #include "stm32f4xx_conf.h"
 
+static volatile uint_fast16_t ticks;
+
 int main(){
+	ticks = 0;
+	
 	//Enable GPIO clock
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC1, ENABLE);
@@ -13,7 +17,7 @@ int main(){
 	gpio.GPIO_Mode = GPIO_Mode_OUT;
 	gpio.GPIO_Speed = GPIO_Speed_100MHz;
 	gpio.GPIO_OType = GPIO_OType_PP;
-	gpio.GPIO_PuPd =GPIO_PuPd_NOPULL;
+	gpio.GPIO_PuPd = GPIO_PuPd_NOPULL;
 	
 	GPIO_Init(GPIOD, &gpio);
 	
@@ -40,8 +44,23 @@ int main(){
 	//Turn on LEDs
 	GPIO_SetBits(GPIOD, GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15);
 	
+	SysTick_Config(SystemCoreClock / 50);
+	
 	while(1){
+		while (!ticks);
+		ticks = 0;
+		
+		// Sample
+		ADC_SoftwareStartConv(ADC1); //Starting Conversion, waiting for it to finish, clearing the flag, reading the result
+		while(ADC_GetFlagStatus(ADC1, ADC_FLAG_EOC) == RESET); //Could be through interrupts (Later)
+		ADC_ClearFlag (ADC1, ADC_FLAG_EOC); //EOC means End Of Conversion
+		ADC_GetConversionValue(ADC1); // Result available in ADC1->DR
+	
 	}
 	
 	return 0;
+}
+
+void SysTick_Handler() {
+	ticks = 1;
 }
