@@ -3,9 +3,10 @@
 #include "stm32f4xx_conf.h"
 
 int main(){
-	
+	//Enable GPIO clock
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
 	
+	//GPIO configuration
 	GPIO_InitTypeDef gpio;
 	gpio.GPIO_Pin = GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15;
 	gpio.GPIO_Mode = GPIO_Mode_OUT;
@@ -15,6 +16,7 @@ int main(){
 	
 	GPIO_Init(GPIOD, &gpio);
 	
+	//Turn on LEDs
 	GPIO_SetBits(GPIOD, GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15);
 	
 	while(1){
