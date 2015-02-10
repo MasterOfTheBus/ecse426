@@ -44,18 +44,28 @@ int main(){
 	//Turn on LEDs
 	GPIO_SetBits(GPIOD, GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15);
 	
+	//Set SysTick to 168MHz/50Hz
 	SysTick_Config(SystemCoreClock / 50);
+	int counter;
+	counter=1;
+	
+	//Enable temperatur sensor
+	ADC_TempSensorVrefintCmd(ENABLE);
 	
 	while(1){
-		while (!ticks);
-		ticks = 0;
 		
-		// Sample
-		ADC_SoftwareStartConv(ADC1); //Starting Conversion, waiting for it to finish, clearing the flag, reading the result
-		while(ADC_GetFlagStatus(ADC1, ADC_FLAG_EOC) == RESET); //Could be through interrupts (Later)
-		ADC_ClearFlag (ADC1, ADC_FLAG_EOC); //EOC means End Of Conversion
-		ADC_GetConversionValue(ADC1); // Result available in ADC1->DR
-	
+		
+		while (!ticks); 	//Waiting for interrupt
+		ticks = 0;				//Reset tick
+		
+		// Sampling and converting
+		ADC_SoftwareStartConv(ADC1); 														//Starting Conversion, waiting for it to finish, clearing the flag, reading the result
+		while(ADC_GetFlagStatus(ADC1, ADC_FLAG_EOC) == RESET); 	//Wait until EOC is set
+		ADC_ClearFlag (ADC1, ADC_FLAG_EOC); 										//Reset EOC
+		ADC_GetConversionValue(ADC1);														//Result available in ADC1->DR
+		
+		printf("%i ------ count: %i\n", ADC1->DR, counter);
+		counter++;
 	}
 	
 	return 0;
