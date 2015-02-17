@@ -4,6 +4,7 @@
 
 static volatile uint_fast16_t ticks;
 
+// Define the Kalman filter
 typedef struct kalman_state kalman_state;
 struct kalman_state {
 	float q; // process noise covariance
@@ -26,6 +27,12 @@ int Kalmanfilter_C (float input, float* output, kalman_state* kstate) {
 	*output = kstate->x;
 	return 0;
 }
+// Variables to convert voltage to temperature
+float step_size = ((3)/4096);
+float v_sense;
+float v_25 = 0.76;
+float avg_slope = 2.5;
+float temp_C;
 
 int main(){
 	ticks = 0;
@@ -68,16 +75,17 @@ int main(){
 	ADC_RegularChannelConfig(ADC1, ADC_Channel_16, 1, ADC_SampleTime_480Cycles); //Setting Channel and ADC
 	
 	//Turn on LEDs
-	GPIO_SetBits(GPIOD, GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15);
+	//GPIO_SetBits(GPIOD, GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15);
 	
 	//Set SysTick to 168MHz/50Hz
 	SysTick_Config(SystemCoreClock / 50);
-	int counter;
-	counter=1;
 	
 	//Enable temperatur sensor
 	ADC_TempSensorVrefintCmd(ENABLE);
 	
+	// Reference Temp
+	float temp_ref = 24;
+	int LED_count = 0;
 	while(1){
 		float f_output;
 		
@@ -90,15 +98,61 @@ int main(){
 		ADC_ClearFlag (ADC1, ADC_FLAG_EOC); 										//Reset EOC
 		ADC_GetConversionValue(ADC1);														//Result available in ADC1->DR
 		
+		printf("ADC: %i ", ADC1->DR);
+
+		// Filtering
 		if (Kalmanfilter_C(ADC1->DR, &f_output, &kstate) == 0) {
 			printf("filtered: %f\n", f_output);
 		}
 		
-		printf("%i ------ count: %i\n", ADC1->DR, counter);
-		counter++;
+		// Convert to temperature
+		v_sense = f_output*step_size;
+		temp_C = ((v_sense-v_25)/avg_slope) + 25;
+		printf("Temperature: %f C \n", temp_C);
+		
+		// Temperature display
+		while(temp_C <= 40){
+			
+			if (temp_C-temp_ref >= 2){
+				LED_count ++;
+				temp_ref = temp_C;
+			}
+			if (temp_ref-temp_C >= 2){
+				LED_count--;
+				temp_ref = temp_C;
+			}
+					
+			if (LED_count % 4 == 0){
+				GPIO_SetBits(GPIOD, GPIO_Pin_12);
+				GPIO_ResetBits(GPIOD, GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15);
+			}
+			if (LED_count % 4 == 1){
+				GPIO_SetBits(GPIOD, GPIO_Pin_13);
+				GPIO_ResetBits(GPIOD, GPIO_Pin_12 | GPIO_Pin_14 | GPIO_Pin_15);
+			}
+			if (LED_count % 4 == 2){
+				GPIO_SetBits(GPIOD, GPIO_Pin_14);
+				GPIO_ResetBits(GPIOD, GPIO_Pin_13 | GPIO_Pin_12 | GPIO_Pin_15);
+			}
+			if (LED_count % 4 == 3){
+				GPIO_SetBits(GPIOD, GPIO_Pin_15);
+				GPIO_ResetBits(GPIOD, GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_12);
+			}
+		}
+		
+		// Overheating alarm
+		while (temp_C > 40){
+			
+		}
+		
+			
+		
+		
+		
+		
 	}
-	
 	return 0;
+	
 }
 
 void SysTick_Handler() {
