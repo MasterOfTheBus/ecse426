@@ -28,14 +28,19 @@ int Kalmanfilter_C (float input, float* output, kalman_state* kstate) {
 	return 0;
 }
 // Variables to convert voltage to temperature
-float step_size = ((3)/4096);
-float v_sense;
+float step_size = ((3.6)/4096);
 float v_25 = 0.76;
-float avg_slope = 2.5;
-float temp_C;
+float avg_slope = 0.025;
+
+// Reference Temp
+float temp_ref = 30;
+int LED_count = 0;
+
 
 int main(){
 	ticks = 0;
+	float v_sense;
+	float temp_C;
 	
 	//Initialize the kalman state
 	kalman_state kstate = {0.5, 0.5, 0.5, 0.5, 0.5};
@@ -83,9 +88,8 @@ int main(){
 	//Enable temperatur sensor
 	ADC_TempSensorVrefintCmd(ENABLE);
 	
-	// Reference Temp
-	float temp_ref = 24;
-	int LED_count = 0;
+	
+
 	while(1){
 		float f_output;
 		
@@ -107,19 +111,20 @@ int main(){
 		
 		// Convert to temperature
 		v_sense = f_output*step_size;
-		temp_C = ((v_sense-v_25)/avg_slope) + 25;
+		temp_C = ((v_sense-v_25)/avg_slope)+25;
+		printf("v_sense: %f\n", v_sense);
 		printf("Temperature: %f C \n", temp_C);
 		
 		// Temperature display
-		while(temp_C <= 40){
+		if(temp_C <= 40){
 			
 			if (temp_C-temp_ref >= 2){
 				LED_count ++;
-				temp_ref = temp_C;
+				temp_ref += 2;
 			}
 			if (temp_ref-temp_C >= 2){
 				LED_count--;
-				temp_ref = temp_C;
+				temp_ref -= 2;
 			}
 					
 			if (LED_count % 4 == 0){
@@ -141,7 +146,7 @@ int main(){
 		}
 		
 		// Overheating alarm
-		while (temp_C > 40){
+		if (temp_C > 40){
 			
 		}
 		
