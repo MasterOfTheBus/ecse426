@@ -33,7 +33,7 @@ float v_25 = 0.76;
 float avg_slope = 0.025;
 
 // Reference Temp
-float temp_ref = 30;
+float temp_ref = 32;
 int LED_count = 0;
 
 
