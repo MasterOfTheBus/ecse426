@@ -4,8 +4,34 @@
 
 static volatile uint_fast16_t ticks;
 
+typedef struct kalman_state kalman_state;
+struct kalman_state {
+	float q; // process noise covariance
+	float r; // measurement noise covariance
+	float x; // estimated value
+	float p; // estimation error covariance
+	float k; // adaptive Kalman filter gain
+};
+
+int Kalmanfilter_C(float input, float* output, kalman_state* kstate);
+
+int Kalmanfilter_C (float input, float* output, kalman_state* kstate) {
+	kstate->p = kstate->p + kstate->q;
+	kstate->k = kstate->p / (kstate->p + kstate->r);
+	kstate->x = kstate->x + kstate->k * (input - kstate->x);
+	if (kstate->x != kstate->x) { // check for overflow, underflow
+		return 1;
+	}
+	kstate->p = (1 - kstate->k) * kstate->p;
+	*output = kstate->x;
+	return 0;
+}
+
 int main(){
 	ticks = 0;
+	
+	//Initialize the kalman state
+	kalman_state kstate = {0.5, 0.5, 0.5, 0.5, 0.5};
 	
 	//Enable GPIO clock
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
@@ -53,7 +79,7 @@ int main(){
 	ADC_TempSensorVrefintCmd(ENABLE);
 	
 	while(1){
-		
+		float f_output;
 		
 		while (!ticks); 	//Waiting for interrupt
 		ticks = 0;				//Reset tick
@@ -63,6 +89,10 @@ int main(){
 		while(ADC_GetFlagStatus(ADC1, ADC_FLAG_EOC) == RESET); 	//Wait until EOC is set
 		ADC_ClearFlag (ADC1, ADC_FLAG_EOC); 										//Reset EOC
 		ADC_GetConversionValue(ADC1);														//Result available in ADC1->DR
+		
+		if (Kalmanfilter_C(ADC1->DR, &f_output, &kstate) == 0) {
+			printf("filtered: %f\n", f_output);
+		}
 		
 		printf("%i ------ count: %i\n", ADC1->DR, counter);
 		counter++;
