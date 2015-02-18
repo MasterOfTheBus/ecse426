@@ -28,12 +28,12 @@ int Kalmanfilter_C (float input, float* output, kalman_state* kstate) {
 	return 0;
 }
 // Variables to convert voltage to temperature
-float step_size = ((3.6)/4096);
+float step_size = ((3.0)/4096);
 float v_25 = 0.76;
 float avg_slope = 0.025;
 
 // Reference Temp
-float temp_ref = 32;
+float temp_ref = 26;
 int LED_count = 0;
 
 
@@ -43,7 +43,7 @@ int main(){
 	float temp_C;
 	
 	//Initialize the kalman state
-	kalman_state kstate = {0.5, 0.5, 0.5, 0.5, 0.5};
+	kalman_state kstate = {0.0025, 5.0, 1100.0, 0.0, 0.0};
 	
 	//Enable GPIO clock
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
@@ -76,6 +76,8 @@ int main(){
 	adc_init.ADC_NbrOfConversion = 1;
 	ADC_Init(ADC1, &adc_init); //Initialization
 	
+	//Enable temperatur sensor
+	ADC_TempSensorVrefintCmd(ENABLE);
 	ADC_Cmd(ADC1, ENABLE); //Enable Module
 	ADC_RegularChannelConfig(ADC1, ADC_Channel_16, 1, ADC_SampleTime_480Cycles); //Setting Channel and ADC
 	
@@ -85,8 +87,7 @@ int main(){
 	//Set SysTick to 168MHz/50Hz
 	SysTick_Config(SystemCoreClock / 50);
 	
-	//Enable temperatur sensor
-	ADC_TempSensorVrefintCmd(ENABLE);
+
 	
 	
 
@@ -149,10 +150,6 @@ int main(){
 		if (temp_C > 40){
 			
 		}
-		
-			
-		
-		
 		
 		
 	}
