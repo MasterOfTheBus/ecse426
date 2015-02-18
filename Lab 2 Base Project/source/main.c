@@ -1,32 +1,14 @@
 #include <stdio.h>
 #include "stm32f4xx.h"                  // Device header
 #include "stm32f4xx_conf.h"
+#include "kalman.h"
+//#include "temperature.h"
 
+/**
+	* @brief A flag indicating whether Systick interrupt has occured
+	*/
 static volatile uint_fast16_t ticks;
 
-// Define the Kalman filter
-typedef struct kalman_state kalman_state;
-struct kalman_state {
-	float q; // process noise covariance
-	float r; // measurement noise covariance
-	float x; // estimated value
-	float p; // estimation error covariance
-	float k; // adaptive Kalman filter gain
-};
-
-int Kalmanfilter_C(float input, float* output, kalman_state* kstate);
-
-int Kalmanfilter_C (float input, float* output, kalman_state* kstate) {
-	kstate->p = kstate->p + kstate->q;
-	kstate->k = kstate->p / (kstate->p + kstate->r);
-	kstate->x = kstate->x + kstate->k * (input - kstate->x);
-	if (kstate->x != kstate->x) { // check for overflow, underflow
-		return 1;
-	}
-	kstate->p = (1 - kstate->k) * kstate->p;
-	*output = kstate->x;
-	return 0;
-}
 // Variables to convert voltage to temperature
 float step_size = ((3.0)/4096);
 float v_25 = 0.76;
@@ -35,16 +17,19 @@ float v_sense;
 float temp_C;
 
 // Reference Temp
-float temp_ref = 24;
+float temp_ref = 34;
+#define threshold_temp 55
 int LED_count = 0;
 
 // PWM
-int period = 70000;  // 0.02s => 168000000*0.02 pulses
-int duty_cycle;
+int period = 70000;//5;  // 0.02s => 168000000*0.02 pulses
 
 
 int main(){
 	ticks = 0;
+	int counter = 0;
+	int up = 1;
+	float duty_cycle = 0.0;
 	
 	//Initialize the kalman state
 	kalman_state kstate = {0.0025, 5.0, 1100.0, 0.0, 0.0};
@@ -80,32 +65,26 @@ int main(){
 	adc_init.ADC_NbrOfConversion = 1;
 	ADC_Init(ADC1, &adc_init); //Initialization
 	
-	
-	
 	ADC_RegularChannelConfig(ADC1, ADC_Channel_16, 1, ADC_SampleTime_480Cycles); //Setting Channel and ADC
 
-	//Enable temperatur sensor
-	ADC_TempSensorVrefintCmd(ENABLE);
+	ADC_Cmd(ADC1, ENABLE); //Enable Module - Set the ADON bit
 	
-	ADC_Cmd(ADC1, ENABLE); //Enable Module
-	//Turn on LEDs
-	//GPIO_SetBits(GPIOD, GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15);
+	//Enable temperatur sensor - Set the TSVREFE bit
+	ADC_TempSensorVrefintCmd(ENABLE);
 	
 	//Set SysTick to 168MHz/50Hz
 	SysTick_Config(SystemCoreClock / 50);
 	
-	
-
 	while(1){
 		float f_output;
 		
-
-		
 		while (!ticks); 	//Waiting for interrupt
 		ticks = 0;				//Reset tick
+		counter++;
 		
+		//if (counter == 50) {
 		// Sampling and converting
-		ADC_SoftwareStartConv(ADC1); 														//Starting Conversion, waiting for it to finish, clearing the flag, reading the result
+		ADC_SoftwareStartConv(ADC1); 														//Starting Conversion - set the SWSTART bit to 1
 		while(ADC_GetFlagStatus(ADC1, ADC_FLAG_EOC) == RESET); 	//Wait until EOC is set
 		ADC_ClearFlag (ADC1, ADC_FLAG_EOC); 										//Reset EOC
 		ADC_GetConversionValue(ADC1);														//Result available in ADC1->DR
@@ -115,6 +94,8 @@ int main(){
 		// Filtering
 		if (Kalmanfilter_C(ADC1->DR, &f_output, &kstate) == 0) {
 			printf("filtered: %f\n", f_output);
+		} else {
+			continue;
 		}
 		
 		// Convert to temperature
@@ -122,9 +103,11 @@ int main(){
 		temp_C = ((v_sense-v_25)/avg_slope)+25;
 		printf("v_sense: %f\n", v_sense);
 		printf("Temperature: %f C \n", temp_C);
+		counter = -1;
+	//}
 		
 		// Temperature display
-		if(temp_C <= 40){
+		if(temp_C <= threshold_temp){
 			
 			if (temp_C-temp_ref >= 2){
 				LED_count ++;
@@ -154,14 +137,35 @@ int main(){
 		}
 		
 		// Overheating alarm
-		int i;
-		if (temp_C > 40){
-			duty_cycle = (temp_C-40)*5;
-			//duty_cycle = 5;
+		if (temp_C > threshold_temp){
+			printf("counter: %i      duty cycle: %f\n", counter, duty_cycle);
+			
+			/*if (counter == 0) {
+				GPIO_SetBits(GPIOD, GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15);
+			} else if (counter == duty_cycle*10.0) {
+				GPIO_ResetBits(GPIOD, GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15);
+			} else if (counter >= 10) {
+				counter = 0;*/
+				if (up) {
+					if (duty_cycle < 1.0) {
+						duty_cycle+=0.1;
+					} else {
+						up = 0;
+					}
+				} else {
+					if (duty_cycle > 0) {
+						duty_cycle-=0.1;
+					} else {
+						up = 1;
+					}
+				}
+			//}
+			
+			float i;
 			GPIO_SetBits(GPIOD, GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15);
-			for(i=0;i<(period*duty_cycle/100);i++){}
+			for(i=0.0;i<(period*duty_cycle);i++);
 			GPIO_ResetBits(GPIOD, GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15);
-			for(i=0;i<((period)*(1-(duty_cycle/100)));i++){}	
+			for(i=0.0;i<((period)*(1.0-(duty_cycle)));i++);
 		}
 		
 		
@@ -170,10 +174,10 @@ int main(){
 	
 }
 
-
+/**
+	* @brief Set the value of ticks to 1 to indicate the start of a new period.
+	*/
 void SysTick_Handler() {
 	ticks = 1;
 
 }
-
-
