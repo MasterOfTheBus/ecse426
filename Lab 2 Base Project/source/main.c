@@ -31,16 +31,20 @@ int Kalmanfilter_C (float input, float* output, kalman_state* kstate) {
 float step_size = ((3.0)/4096);
 float v_25 = 0.76;
 float avg_slope = 0.025;
+float v_sense;
+float temp_C;
 
 // Reference Temp
 float temp_ref = 26;
 int LED_count = 0;
 
+// PWM
+int period = 50000;  // 0.02s => 168000000*0.02 pulses
+int duty_cycle;
+
 
 int main(){
 	ticks = 0;
-	float v_sense;
-	float temp_C;
 	
 	//Initialize the kalman state
 	kalman_state kstate = {0.0025, 5.0, 1100.0, 0.0, 0.0};
@@ -87,12 +91,12 @@ int main(){
 	//Set SysTick to 168MHz/50Hz
 	SysTick_Config(SystemCoreClock / 50);
 	
-
-	
 	
 
 	while(1){
 		float f_output;
+		
+
 		
 		while (!ticks); 	//Waiting for interrupt
 		ticks = 0;				//Reset tick
@@ -147,8 +151,13 @@ int main(){
 		}
 		
 		// Overheating alarm
+		int i;
 		if (temp_C > 40){
-			
+			duty_cycle = (60-temp_C)*5;
+			GPIO_SetBits(GPIOD, GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15);
+			for(i=0;i<(period*duty_cycle/100);i++){}
+			GPIO_ResetBits(GPIOD, GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15);
+			for(i=0;i<((period)*(1-(duty_cycle/100)));i++){}	
 		}
 		
 		
@@ -157,6 +166,10 @@ int main(){
 	
 }
 
+
 void SysTick_Handler() {
 	ticks = 1;
+
 }
+
+
