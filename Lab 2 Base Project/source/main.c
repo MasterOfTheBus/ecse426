@@ -30,16 +30,16 @@ int Kalmanfilter_C (float input, float* output, kalman_state* kstate) {
 // Variables to convert voltage to temperature
 float step_size = ((3.0)/4096);
 float v_25 = 0.76;
-float avg_slope = 0.025;
+float avg_slope = 0.0025;
 float v_sense;
 float temp_C;
 
 // Reference Temp
-float temp_ref = 26;
+float temp_ref = 24;
 int LED_count = 0;
 
 // PWM
-int period = 50000;  // 0.02s => 168000000*0.02 pulses
+int period = 70000;  // 0.02s => 168000000*0.02 pulses
 int duty_cycle;
 
 
@@ -80,11 +80,14 @@ int main(){
 	adc_init.ADC_NbrOfConversion = 1;
 	ADC_Init(ADC1, &adc_init); //Initialization
 	
+	
+	
+	ADC_RegularChannelConfig(ADC1, ADC_Channel_16, 1, ADC_SampleTime_480Cycles); //Setting Channel and ADC
+
 	//Enable temperatur sensor
 	ADC_TempSensorVrefintCmd(ENABLE);
-	ADC_Cmd(ADC1, ENABLE); //Enable Module
-	ADC_RegularChannelConfig(ADC1, ADC_Channel_16, 1, ADC_SampleTime_480Cycles); //Setting Channel and ADC
 	
+	ADC_Cmd(ADC1, ENABLE); //Enable Module
 	//Turn on LEDs
 	//GPIO_SetBits(GPIOD, GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15);
 	
@@ -115,7 +118,7 @@ int main(){
 		}
 		
 		// Convert to temperature
-		v_sense = f_output*step_size;
+		v_sense = (f_output*step_size);
 		temp_C = ((v_sense-v_25)/avg_slope)+25;
 		printf("v_sense: %f\n", v_sense);
 		printf("Temperature: %f C \n", temp_C);
@@ -153,7 +156,7 @@ int main(){
 		// Overheating alarm
 		int i;
 		if (temp_C > 40){
-			duty_cycle = 100-((60-temp_C)*5);
+			duty_cycle = (temp_C-40)*5;
 			//duty_cycle = 5;
 			GPIO_SetBits(GPIOD, GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15);
 			for(i=0;i<(period*duty_cycle/100);i++){}
