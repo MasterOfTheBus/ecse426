@@ -153,7 +153,8 @@ int main(){
 		// Overheating alarm
 		int i;
 		if (temp_C > 40){
-			duty_cycle = (60-temp_C)*5;
+			duty_cycle = 100-((60-temp_C)*5);
+			//duty_cycle = 5;
 			GPIO_SetBits(GPIOD, GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15);
 			for(i=0;i<(period*duty_cycle/100);i++){}
 			GPIO_ResetBits(GPIOD, GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15);
