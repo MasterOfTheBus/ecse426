@@ -1,21 +1,16 @@
 #include <stdio.h>
-#include "config_init.h"
+#include "stm32f4xx_conf.h"
+#include "GPIO.h"
+#include "ADC.h"
 #include "kalman.h"
 #include "temperature.h"
-
-#ifndef config_init
-#include "stm32f4xx.h"
-#include "stm32f4xx_conf.h"
-#endif
 
 /**
 	* @brief A flag indicating whether Systick interrupt has occured
 	*/
 static volatile uint_fast16_t ticks;
 
-// Reference Temp
-float temp_ref = 34;
-#define threshold_temp 20
+#define threshold_temp 45
 
 // PWM
 int period = 13000; // overall period of the duty cycle
@@ -25,6 +20,9 @@ int main(){
 	int up = 1;
 	float duty_cycle = 0.0;
 	
+	// Reference Temp
+	float temp_ref = 34.0;
+
 	int LED_count = 0;
 	
 	// Variables to convert voltage to temperature
@@ -100,24 +98,7 @@ int main(){
 				temp_ref -= 2;
 			}
 
-			DisplaySigleLED(LED_count);
-
-			if (LED_count % 4 == 0){
-				GPIO_SetBits(GPIOD, GPIO_Pin_12);
-				GPIO_ResetBits(GPIOD, GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15);
-			}
-			if (LED_count % 4 == 1){
-				GPIO_SetBits(GPIOD, GPIO_Pin_13);
-				GPIO_ResetBits(GPIOD, GPIO_Pin_12 | GPIO_Pin_14 | GPIO_Pin_15);
-			}
-			if (LED_count % 4 == 2){
-				GPIO_SetBits(GPIOD, GPIO_Pin_14);
-				GPIO_ResetBits(GPIOD, GPIO_Pin_13 | GPIO_Pin_12 | GPIO_Pin_15);
-			}
-			if (LED_count % 4 == 3){
-				GPIO_SetBits(GPIOD, GPIO_Pin_15);
-				GPIO_ResetBits(GPIOD, GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_12);
-			}
+			DisplaySingleLED(LED_count, GPIOD);
 		}
 		
 		// Overheating alarm
