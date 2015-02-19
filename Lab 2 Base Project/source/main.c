@@ -16,23 +16,17 @@ static volatile uint_fast16_t ticks;
 int period = 13000; // overall period of the duty cycle
 
 int main(){
-	ticks = 0;
-	int up = 1;
-	float duty_cycle = 0.0;
-	
-	// Reference Temp
-	float temp_ref = 34.0;
-
-	int LED_count = 0;
+	ticks = 0; // Indicate an iterrupt
+	int up = 1; // Indicate whether to increment or decrement the duty cycle
+	float duty_cycle = 0.0; // the percentage of the "period" to count to
+	float temp_ref = 34.0; // Reference Temp
+	int LED_count = 0; // Choose which LED to enable
 	
 	// Variables to convert voltage to temperature
 	float temp_C;
 	
 	//Initialize the kalman state
 	kalman_state kstate = {0.0025, 5.0, 1100.0, 0.0, 0.0};
-	
-	//Enable GPIO clock
-	RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC1, ENABLE);
 	
 	//GPIO configuration
 	configInit_GPIO(GPIOD, RCC_AHB1Periph_GPIOD,
@@ -41,25 +35,12 @@ int main(){
 									GPIO_PuPd_NOPULL);
 	
 	//ADC configuration
-	ADC_InitTypeDef adc_init;
-	ADC_CommonInitTypeDef adc_common_init;
-	adc_common_init.ADC_Mode = ADC_Mode_Independent;
-	adc_common_init.ADC_Prescaler = ADC_Prescaler_Div2;
-	adc_common_init.ADC_DMAAccessMode = ADC_DMAAccessMode_Disabled;
-	adc_common_init.ADC_TwoSamplingDelay = ADC_TwoSamplingDelay_5Cycles;
-	ADC_CommonInit(&adc_common_init); //Initialization
+	configInit_common_ADC(ADC_Mode_Independent, ADC_Prescaler_Div2,
+												ADC_DMAAccessMode_Disabled, ADC_TwoSamplingDelay_5Cycles);
 	
-	adc_init.ADC_Resolution = ADC_Resolution_12b;
-	adc_init.ADC_ScanConvMode = DISABLE;
-	adc_init.ADC_ContinuousConvMode = DISABLE;
-	adc_init.ADC_ExternalTrigConvEdge = ADC_ExternalTrigConvEdge_None;
-	adc_init.ADC_DataAlign = ADC_DataAlign_Right;
-	adc_init.ADC_NbrOfConversion = 1;
-	ADC_Init(ADC1, &adc_init); //Initialization
-	
-	ADC_RegularChannelConfig(ADC1, ADC_Channel_16, 1, ADC_SampleTime_480Cycles); //Setting Channel and ADC
-
-	ADC_Cmd(ADC1, ENABLE); //Enable Module - Set the ADON bit
+	configInit_ADC(ADC1, RCC_APB2Periph_ADC1, ADC_Resolution_12b, DISABLE, DISABLE,
+								 ADC_ExternalTrigConvEdge_None, ADC_DataAlign_Right, 1, ADC_Channel_16,
+								 1, ADC_SampleTime_480Cycles);
 	
 	//Enable temperatur sensor - Set the TSVREFE bit
 	ADC_TempSensorVrefintCmd(ENABLE);
@@ -125,7 +106,6 @@ int main(){
 		}
 	}
 	return 0;
-	
 }
 
 /**
@@ -133,5 +113,4 @@ int main(){
 	*/
 void SysTick_Handler() {
 	ticks = 1;
-
 }
