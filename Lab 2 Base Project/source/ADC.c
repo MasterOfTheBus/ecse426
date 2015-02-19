@@ -31,3 +31,11 @@ void configInit_ADC(ADC_TypeDef* ADCx, uint32_t periph_ADCx, uint32_t resolution
 
 	ADC_Cmd(ADCx, ENABLE); //Enable Module - Set the ADON bit
 }
+
+uint32_t getTemp() {
+		// Sampling and converting
+		ADC_SoftwareStartConv(ADC1); 														//Starting Conversion - set the SWSTART bit to 1
+		while(ADC_GetFlagStatus(ADC1, ADC_FLAG_EOC) == RESET); 	//Wait until EOC is set
+		ADC_ClearFlag (ADC1, ADC_FLAG_EOC); 										//Reset EOC
+		return (ADC_GetConversionValue(ADC1));														//Result available in ADC1->DR
+}

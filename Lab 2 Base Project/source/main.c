@@ -52,15 +52,9 @@ int main(){
 		if (ticks) {
 			ticks = 0;				//Reset tick
 			float f_output;
-		
-			// Sampling and converting
-			ADC_SoftwareStartConv(ADC1); 														//Starting Conversion - set the SWSTART bit to 1
-			while(ADC_GetFlagStatus(ADC1, ADC_FLAG_EOC) == RESET); 	//Wait until EOC is set
-			ADC_ClearFlag (ADC1, ADC_FLAG_EOC); 										//Reset EOC
-			ADC_GetConversionValue(ADC1);														//Result available in ADC1->DR
-
-			// Filtering
-			if (Kalmanfilter_C(ADC1->DR, &f_output, &kstate) != 0) {
+			
+			// Get Temerature and Filtering
+			if (Kalmanfilter_C(getTemp(), &f_output, &kstate) != 0) {
 				continue;
 			}
 		
