@@ -4,21 +4,17 @@
 #include "ADC.h"
 #include "kalman.h"
 #include "temperature.h"
+#include "PWM.h"
 
 /**
 	* @brief A flag indicating whether Systick interrupt has occured
 	*/
 static volatile uint_fast16_t ticks;
 
-#define threshold_temp 45
-
-// PWM
-int period = 13000; // overall period of the duty cycle
+#define threshold_temp 55
 
 int main(){
 	ticks = 0; // Indicate an iterrupt
-	int up = 1; // Indicate whether to increment or decrement the duty cycle
-	float duty_cycle = 0.0; // the percentage of the "period" to count to
 	float temp_ref = 34.0; // Reference Temp
 	int LED_count = 0; // Choose which LED to enable
 	
@@ -27,6 +23,9 @@ int main(){
 	
 	//Initialize the kalman state
 	kalman_state kstate = {0.0025, 5.0, 1100.0, 0.0, 0.0};
+	
+	//Set the values for the PWM
+	pwm pwm_val = {13000, 0.0, 1};
 	
 	//GPIO configuration
 	configInit_GPIO(GPIOD, RCC_AHB1Periph_GPIOD,
@@ -78,25 +77,13 @@ int main(){
 		
 		// Overheating alarm
 		if (temp_C > threshold_temp){
-			if (up) {
-				if (duty_cycle < 1.0) {
-					duty_cycle+=0.1;
-				} else {
-					up = 0;
-				}
-			} else {
-				if (duty_cycle > 0) {
-					duty_cycle-=0.1;
-				} else {
-					up = 1;
-				}
-			}
+			adjustDutyCycle(&pwm_val);
 
 			float i;
 			GPIO_SetBits(GPIOD, GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15);
-			for(i=0.0;i<(period*duty_cycle);i++);
+			for(i=0.0;i<(pwm_val.period*pwm_val.duty_cycle);i++);
 			GPIO_ResetBits(GPIOD, GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15);
-			for(i=0.0;i<((period)*(1.0-(duty_cycle)));i++);
+			for(i=0.0;i<((pwm_val.period)*(1.0-(pwm_val.duty_cycle)));i++);
 		}
 	}
 	return 0;
