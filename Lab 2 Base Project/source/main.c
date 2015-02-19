@@ -2,7 +2,7 @@
 #include "stm32f4xx.h"                  // Device header
 #include "stm32f4xx_conf.h"
 #include "kalman.h"
-//#include "temperature.h"
+#include "temperature.h"
 
 /**
 	* @brief A flag indicating whether Systick interrupt has occured
@@ -10,20 +10,16 @@
 static volatile uint_fast16_t ticks;
 
 // Variables to convert voltage to temperature
-float step_size = ((3.0)/4096);
-float v_25 = 0.76;
-float avg_slope = 0.0025;
 float v_sense;
 float temp_C;
 
 // Reference Temp
 float temp_ref = 34;
-#define threshold_temp 55
+#define threshold_temp 20
 int LED_count = 0;
 
 // PWM
-int period = 70000;//5;  // 0.02s => 168000000*0.02 pulses
-
+int period = 15000; // 0.02s => 168000000*0.02 pulses
 
 int main(){
 	ticks = 0;
@@ -76,36 +72,32 @@ int main(){
 	SysTick_Config(SystemCoreClock / 50);
 	
 	while(1){
-		float f_output;
+		if (ticks) {
+			ticks = 0;				//Reset tick
+			float f_output;
 		
-		while (!ticks); 	//Waiting for interrupt
-		ticks = 0;				//Reset tick
-		counter++;
+			// Sampling and converting
+			ADC_SoftwareStartConv(ADC1); 														//Starting Conversion - set the SWSTART bit to 1
+			while(ADC_GetFlagStatus(ADC1, ADC_FLAG_EOC) == RESET); 	//Wait until EOC is set
+			ADC_ClearFlag (ADC1, ADC_FLAG_EOC); 										//Reset EOC
+			ADC_GetConversionValue(ADC1);														//Result available in ADC1->DR
 		
-		//if (counter == 50) {
-		// Sampling and converting
-		ADC_SoftwareStartConv(ADC1); 														//Starting Conversion - set the SWSTART bit to 1
-		while(ADC_GetFlagStatus(ADC1, ADC_FLAG_EOC) == RESET); 	//Wait until EOC is set
-		ADC_ClearFlag (ADC1, ADC_FLAG_EOC); 										//Reset EOC
-		ADC_GetConversionValue(ADC1);														//Result available in ADC1->DR
-		
-		printf("ADC: %i ", ADC1->DR);
+			printf("ADC: %i ", ADC1->DR);
 
-		// Filtering
-		if (Kalmanfilter_C(ADC1->DR, &f_output, &kstate) == 0) {
-			printf("filtered: %f\n", f_output);
-		} else {
-			continue;
+			// Filtering
+			if (Kalmanfilter_C(ADC1->DR, &f_output, &kstate) == 0) {
+				printf("filtered: %f\n", f_output);
+			} else {
+				continue;
+			}
+		
+			// Convert to temperature
+			v_sense = (f_output*step_size);
+			temp_C = voltage2temp(f_output);
+			printf("v_sense: %f\n", v_sense);
+			printf("Temperature: %f C \n", temp_C);
 		}
-		
-		// Convert to temperature
-		v_sense = (f_output*step_size);
-		temp_C = ((v_sense-v_25)/avg_slope)+25;
-		printf("v_sense: %f\n", v_sense);
-		printf("Temperature: %f C \n", temp_C);
-		counter = -1;
-	//}
-		
+		counter++;
 		// Temperature display
 		if(temp_C <= threshold_temp){
 			
@@ -142,10 +134,10 @@ int main(){
 			
 			/*if (counter == 0) {
 				GPIO_SetBits(GPIOD, GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15);
-			} else if (counter == duty_cycle*10.0) {
+			} else if (counter == duty_cycle*period) {
 				GPIO_ResetBits(GPIOD, GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15);
-			} else if (counter >= 10) {
-				counter = 0;*/
+			} else if (counter >= period) {*/
+				counter = -1;
 				if (up) {
 					if (duty_cycle < 1.0) {
 						duty_cycle+=0.1;
@@ -160,15 +152,13 @@ int main(){
 					}
 				}
 			//}
-			
+
 			float i;
 			GPIO_SetBits(GPIOD, GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15);
 			for(i=0.0;i<(period*duty_cycle);i++);
 			GPIO_ResetBits(GPIOD, GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15);
 			for(i=0.0;i<((period)*(1.0-(duty_cycle)));i++);
 		}
-		
-		
 	}
 	return 0;
 	
