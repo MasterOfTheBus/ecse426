@@ -1,48 +1,46 @@
 #include <stdio.h>
-#include "stm32f4xx.h"                  // Device header
-#include "stm32f4xx_conf.h"
+#include "config_init.h"
 #include "kalman.h"
 #include "temperature.h"
+
+#ifndef config_init
+#include "stm32f4xx.h"
+#include "stm32f4xx_conf.h"
+#endif
 
 /**
 	* @brief A flag indicating whether Systick interrupt has occured
 	*/
 static volatile uint_fast16_t ticks;
 
-// Variables to convert voltage to temperature
-float v_sense;
-float temp_C;
-
 // Reference Temp
 float temp_ref = 34;
 #define threshold_temp 20
-int LED_count = 0;
 
 // PWM
-int period = 15000; // 0.02s => 168000000*0.02 pulses
+int period = 13000; // overall period of the duty cycle
 
 int main(){
 	ticks = 0;
-	int counter = 0;
 	int up = 1;
 	float duty_cycle = 0.0;
+	
+	int LED_count = 0;
+	
+	// Variables to convert voltage to temperature
+	float temp_C;
 	
 	//Initialize the kalman state
 	kalman_state kstate = {0.0025, 5.0, 1100.0, 0.0, 0.0};
 	
 	//Enable GPIO clock
-	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC1, ENABLE);
 	
 	//GPIO configuration
-	GPIO_InitTypeDef gpio;
-	gpio.GPIO_Pin = GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15;
-	gpio.GPIO_Mode = GPIO_Mode_OUT;
-	gpio.GPIO_Speed = GPIO_Speed_100MHz;
-	gpio.GPIO_OType = GPIO_OType_PP;
-	gpio.GPIO_PuPd = GPIO_PuPd_NOPULL;
-	
-	GPIO_Init(GPIOD, &gpio);
+	configInit_GPIO(GPIOD, RCC_AHB1Periph_GPIOD,
+									GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15,
+									GPIO_Mode_OUT, GPIO_Speed_100MHz, GPIO_OType_PP,
+									GPIO_PuPd_NOPULL);
 	
 	//ADC configuration
 	ADC_InitTypeDef adc_init;
@@ -81,23 +79,15 @@ int main(){
 			while(ADC_GetFlagStatus(ADC1, ADC_FLAG_EOC) == RESET); 	//Wait until EOC is set
 			ADC_ClearFlag (ADC1, ADC_FLAG_EOC); 										//Reset EOC
 			ADC_GetConversionValue(ADC1);														//Result available in ADC1->DR
-		
-			printf("ADC: %i ", ADC1->DR);
 
 			// Filtering
-			if (Kalmanfilter_C(ADC1->DR, &f_output, &kstate) == 0) {
-				printf("filtered: %f\n", f_output);
-			} else {
+			if (Kalmanfilter_C(ADC1->DR, &f_output, &kstate) != 0) {
 				continue;
 			}
 		
 			// Convert to temperature
-			v_sense = (f_output*step_size);
 			temp_C = voltage2temp(f_output);
-			printf("v_sense: %f\n", v_sense);
-			printf("Temperature: %f C \n", temp_C);
 		}
-		counter++;
 		// Temperature display
 		if(temp_C <= threshold_temp){
 			
@@ -109,7 +99,9 @@ int main(){
 				LED_count--;
 				temp_ref -= 2;
 			}
-					
+
+			DisplaySigleLED(LED_count);
+
 			if (LED_count % 4 == 0){
 				GPIO_SetBits(GPIOD, GPIO_Pin_12);
 				GPIO_ResetBits(GPIOD, GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15);
@@ -130,28 +122,19 @@ int main(){
 		
 		// Overheating alarm
 		if (temp_C > threshold_temp){
-			printf("counter: %i      duty cycle: %f\n", counter, duty_cycle);
-			
-			/*if (counter == 0) {
-				GPIO_SetBits(GPIOD, GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15);
-			} else if (counter == duty_cycle*period) {
-				GPIO_ResetBits(GPIOD, GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15);
-			} else if (counter >= period) {*/
-				counter = -1;
-				if (up) {
-					if (duty_cycle < 1.0) {
-						duty_cycle+=0.1;
-					} else {
-						up = 0;
-					}
+			if (up) {
+				if (duty_cycle < 1.0) {
+					duty_cycle+=0.1;
 				} else {
-					if (duty_cycle > 0) {
-						duty_cycle-=0.1;
-					} else {
-						up = 1;
-					}
+					up = 0;
 				}
-			//}
+			} else {
+				if (duty_cycle > 0) {
+					duty_cycle-=0.1;
+				} else {
+					up = 1;
+				}
+			}
 
 			float i;
 			GPIO_SetBits(GPIOD, GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15);
