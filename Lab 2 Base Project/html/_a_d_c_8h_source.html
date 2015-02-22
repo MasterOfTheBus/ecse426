@@ -86,21 +86,32 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <a href="_a_d_c_8h.html">Go to the documentation of this file.</a><div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;</div>
 <div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor">#include &quot;stm32f4xx.h&quot;</span></div>
 <div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;</div>
-<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;<span class="keywordtype">void</span> <a class="code" href="_a_d_c_8h.html#a637fa19a82479b81292d5557bad0e25d">configInit_common_ADC</a>(uint32_t mode, uint32_t prescaler,</div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;                                                     uint32_t DMAAccessMode, uint32_t twoSamplingDelay);</div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;</div>
-<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;<span class="keywordtype">void</span> <a class="code" href="_a_d_c_8h.html#af49fd89f7970f17e22f276b53338a814">configInit_ADC</a>(ADC_TypeDef* ADCx, uint32_t periph_ADCx, uint32_t resolution, FunctionalState scanConvMode,</div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;                                        FunctionalState contConvMode, uint32_t externalTrigConvEdge, uint32_t externalTrigConv,</div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;                                        uint32_t dataAlign, uint8_t nbrOfConversion, uint8_t channel, uint8_t rank, uint8_t sampleTime);</div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;</div>
-<div class="line"><a name="l00047"></a><span class="lineno">   47</span>&#160;uint32_t <a class="code" href="_a_d_c_8h.html#a7b57cf4cd4a7f3031a36fa29c7a7eb78">getTemp</a>(<span class="keywordtype">void</span>);</div>
-<div class="ttc" id="_a_d_c_8h_html_af49fd89f7970f17e22f276b53338a814"><div class="ttname"><a href="_a_d_c_8h.html#af49fd89f7970f17e22f276b53338a814">configInit_ADC</a></div><div class="ttdeci">void configInit_ADC(ADC_TypeDef *ADCx, uint32_t periph_ADCx, uint32_t resolution, FunctionalState scanConvMode, FunctionalState contConvMode, uint32_t externalTrigConvEdge, uint32_t externalTrigConv, uint32_t dataAlign, uint8_t nbrOfConversion, uint8_t channel, uint8_t rank, uint8_t sampleTime)</div><div class="ttdoc">Initialize the specific ADC component and enable it. </div><div class="ttdef"><b>Definition:</b> ADC.c:14</div></div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;<span class="keywordtype">void</span> <a class="code" href="_a_d_c_8h.html#a637fa19a82479b81292d5557bad0e25d">configInit_common_ADC</a>(uint32_t mode,</div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;                                                     uint32_t prescaler,</div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;                                                     uint32_t DMAAccessMode,</div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;                                                     uint32_t twoSamplingDelay);</div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;</div>
+<div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;<span class="keywordtype">void</span> <a class="code" href="_a_d_c_8h.html#af49fd89f7970f17e22f276b53338a814">configInit_ADC</a>(ADC_TypeDef* ADCx,</div>
+<div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;                                        uint32_t periph_ADCx,</div>
+<div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;                                        uint32_t resolution,</div>
+<div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;                                        FunctionalState scanConvMode,</div>
+<div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;                                        FunctionalState contConvMode,</div>
+<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;                                        uint32_t externalTrigConvEdge,</div>
+<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;                                        uint32_t externalTrigConv,</div>
+<div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;                                        uint32_t dataAlign,</div>
+<div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;                                        uint8_t nbrOfConversion,</div>
+<div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;                                        uint8_t channel,</div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;                                        uint8_t rank,</div>
+<div class="line"><a name="l00068"></a><span class="lineno">   68</span>&#160;                                        uint8_t sampleTime);</div>
+<div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;</div>
+<div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;uint32_t <a class="code" href="_a_d_c_8h.html#a7b57cf4cd4a7f3031a36fa29c7a7eb78">getTemp</a>(<span class="keywordtype">void</span>);</div>
+<div class="ttc" id="_a_d_c_8h_html_af49fd89f7970f17e22f276b53338a814"><div class="ttname"><a href="_a_d_c_8h.html#af49fd89f7970f17e22f276b53338a814">configInit_ADC</a></div><div class="ttdeci">void configInit_ADC(ADC_TypeDef *ADCx, uint32_t periph_ADCx, uint32_t resolution, FunctionalState scanConvMode, FunctionalState contConvMode, uint32_t externalTrigConvEdge, uint32_t externalTrigConv, uint32_t dataAlign, uint8_t nbrOfConversion, uint8_t channel, uint8_t rank, uint8_t sampleTime)</div><div class="ttdoc">Initialize the specific ADC component and enable it. </div><div class="ttdef"><b>Definition:</b> ADC.c:16</div></div>
 <div class="ttc" id="_a_d_c_8h_html_a637fa19a82479b81292d5557bad0e25d"><div class="ttname"><a href="_a_d_c_8h.html#a637fa19a82479b81292d5557bad0e25d">configInit_common_ADC</a></div><div class="ttdeci">void configInit_common_ADC(uint32_t mode, uint32_t prescaler, uint32_t DMAAccessMode, uint32_t twoSamplingDelay)</div><div class="ttdoc">Initialize the ADC common struct and enable the common ADC component. </div><div class="ttdef"><b>Definition:</b> ADC.c:3</div></div>
-<div class="ttc" id="_a_d_c_8h_html_a7b57cf4cd4a7f3031a36fa29c7a7eb78"><div class="ttname"><a href="_a_d_c_8h.html#a7b57cf4cd4a7f3031a36fa29c7a7eb78">getTemp</a></div><div class="ttdeci">uint32_t getTemp(void)</div><div class="ttdoc">Get the reading from the temperature sensor. </div><div class="ttdef"><b>Definition:</b> ADC.c:36</div></div>
+<div class="ttc" id="_a_d_c_8h_html_a7b57cf4cd4a7f3031a36fa29c7a7eb78"><div class="ttname"><a href="_a_d_c_8h.html#a7b57cf4cd4a7f3031a36fa29c7a7eb78">getTemp</a></div><div class="ttdeci">uint32_t getTemp(void)</div><div class="ttdoc">Get the reading from the temperature sensor. </div><div class="ttdef"><b>Definition:</b> ADC.c:47</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sun Feb 22 2015 16:28:49 for Lab 2 by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sun Feb 22 2015 17:07:46 for Lab 2 by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.7
 </small></address>

@@ -193,20 +193,23 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Initialize the specific ADC component and enable it. </p>
+<p>The periph_ADCx parameter corresponds to the parameter in the RCC_AHB1PeriphClockCmd function.</p>
+<p>The parameters resolution, scanConvMode, contConvMode, externalTrigConvEdge, externalTrigConv, dataAlign and nbrOfConversion all correspond to the parameters of the ADC_InitTypeDef struct used to initialize the specific ADC component.</p>
+<p>The parameters ADCx, channel, rank, and sampleTime correspond to the parameters of the ADC_RegularChannelConfig funtion used to configure the ADC channels.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">ADCx</td><td>Corresponds to the ADCx parameter of ADC_RegularChannelConfig </td></tr>
-    <tr><td class="paramname">periph_ADCx</td><td>Corresponds to the RCC_AHB1Periph parameter of RCC_AHB1PeriphClockCmd </td></tr>
-    <tr><td class="paramname">resolution</td><td>Corresponds to ADC_InitTypeDef.ADC_Resolution </td></tr>
-    <tr><td class="paramname">scanConvMode</td><td>Corresponds to ADC_InitTypeDef.ADC_ScanConvMode </td></tr>
-    <tr><td class="paramname">contConvMode</td><td>Corresponds to ADC_InitTypeDef.ADC_ContinuousConvMode </td></tr>
-    <tr><td class="paramname">externalTrigConvEdge</td><td>Corresponds to ADC_InitTypeDef.ADC_ExternalTrigConvEdge </td></tr>
-    <tr><td class="paramname">externalTrigConv</td><td>Corresponds to ADC_InitTypeDef.ADC_ExternalTrigConv </td></tr>
-    <tr><td class="paramname">dataAlign</td><td>Corresponds to ADC_InitTypeDef.ADC_DataAlign </td></tr>
-    <tr><td class="paramname">nbrOfConversion</td><td>Corresponds to ADC_InitTypeDef.ADC_NbrOfConversion </td></tr>
-    <tr><td class="paramname">channel</td><td>Corresponds to the ADC_Channel parameter of ADC_RegularChannelConfig </td></tr>
-    <tr><td class="paramname">rank</td><td>Corresponds to the Rank parameter of ADC_RegularChannelConfig </td></tr>
-    <tr><td class="paramname">sampleTime</td><td>Corresponds to the ADC_SampleTime parameter of ADC_RegularChannelConfig </td></tr>
+    <tr><td class="paramname">ADCx</td><td>Where x can be 1, 2 or 3 to select the ADC peripheral. </td></tr>
+    <tr><td class="paramname">periph_ADCx</td><td>Specifies the AHB1 peripheral to gates its clock. </td></tr>
+    <tr><td class="paramname">resolution</td><td>Configures the ADC resolution dual mode. </td></tr>
+    <tr><td class="paramname">scanConvMode</td><td>Specifies whether the conversion is performed in Scan (multichannels) or Single (one channel) mode. This parameter can be set to ENABLE or DISABLE </td></tr>
+    <tr><td class="paramname">contConvMode</td><td>Specifies whether the conversion is performed in Continuous or Single mode. This parameter can be set to ENABLE or DISABLE. </td></tr>
+    <tr><td class="paramname">externalTrigConvEdge</td><td>Select the external trigger edge and enable the trigger of a regular group. </td></tr>
+    <tr><td class="paramname">externalTrigConv</td><td>Select the external event used to trigger the start of conversion of a regular group. </td></tr>
+    <tr><td class="paramname">dataAlign</td><td>Specifies whether the ADC data alignment is left or right. </td></tr>
+    <tr><td class="paramname">nbrOfConversion</td><td>Specifies the number of ADC conversions that will be done using the sequencer for regular channel group. This parameter must range from 1 to 16. </td></tr>
+    <tr><td class="paramname">channel</td><td>The ADC channel to configure. </td></tr>
+    <tr><td class="paramname">rank</td><td>The rank in the regular group sequencer. This parameter must be between 1 to 16. </td></tr>
+    <tr><td class="paramname">sampleTime</td><td>The sample time value to be set for the selected channel. </td></tr>
   </table>
   </dd>
 </dl>
@@ -256,12 +259,13 @@ Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Initialize the ADC common struct and enable the common ADC component. </p>
+<p>The parameters all correspond to the parameters of the ADC_CommonInitTypeDef struct.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">mode</td><td>Corresponds to ADC_CommonInitTypeDef.ADC_Mode </td></tr>
-    <tr><td class="paramname">prescaler</td><td>Corresponds to ADC_CommonInitTypeDef.ADC_Prescaler </td></tr>
-    <tr><td class="paramname">DMAAccessMode</td><td>Corresponds to ADC_CommonInitTypeDef.ADC_DMAAccessMode </td></tr>
-    <tr><td class="paramname">twoSamplingDelay</td><td>Corresponds to ADC_CommonInitTypeDef.ADC_TwoSamplingDelay </td></tr>
+    <tr><td class="paramname">mode</td><td>Configures the ADC to operate in independent or multi mode. </td></tr>
+    <tr><td class="paramname">prescaler</td><td>Select the frequency of the clock to the ADC. The clock is common for all the ADCs. </td></tr>
+    <tr><td class="paramname">DMAAccessMode</td><td>Configures the Direct memory access mode for multi ADC mode. </td></tr>
+    <tr><td class="paramname">twoSamplingDelay</td><td>Configures the Delay between 2 sampling phases. </td></tr>
   </table>
   </dd>
 </dl>
@@ -301,7 +305,7 @@ Functions</h2></td></tr>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sun Feb 22 2015 16:28:49 for Lab 2 by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sun Feb 22 2015 17:07:46 for Lab 2 by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.7
 </small></address>

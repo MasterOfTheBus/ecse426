@@ -9,10 +9,12 @@
 /**
 	* @brief Initialize the ADC common struct and enable the common ADC component.
 	*
-	* @param mode Corresponds to @ref ADC_CommonInitTypeDef.ADC_Mode
-	* @param prescaler Corresponds to @ref ADC_CommonInitTypeDef.ADC_Prescaler
-	* @param DMAAccessMode Corresponds to @ref ADC_CommonInitTypeDef.ADC_DMAAccessMode
-	* @param twoSamplingDelay Corresponds to @ref ADC_CommonInitTypeDef.ADC_TwoSamplingDelay
+		The parameters all correspond to the parameters of the ADC_CommonInitTypeDef struct.
+	*
+	* @param mode Configures the ADC to operate in independent or multi mode.
+	* @param prescaler Select the frequency of the clock to the ADC. The clock is common for all the ADCs.
+	* @param DMAAccessMode Configures the Direct memory access mode for multi ADC mode.
+	* @param twoSamplingDelay Configures the Delay between 2 sampling phases.
 	* @retval None.
 	*/
 void configInit_common_ADC(uint32_t mode,
@@ -23,18 +25,33 @@ void configInit_common_ADC(uint32_t mode,
 /**
 	* @brief Initialize the specific ADC component and enable it.
 	*
-	* @param ADCx Corresponds to the ADCx parameter of @ref ADC_RegularChannelConfig
-	* @param periph_ADCx Corresponds to the RCC_AHB1Periph parameter of @ref RCC_AHB1PeriphClockCmd
-	* @param resolution Corresponds to @ref ADC_InitTypeDef.ADC_Resolution
-	* @param scanConvMode Corresponds to @ref ADC_InitTypeDef.ADC_ScanConvMode
-	* @param contConvMode Corresponds to @ref ADC_InitTypeDef.ADC_ContinuousConvMode
-	* @param externalTrigConvEdge Corresponds to @ref ADC_InitTypeDef.ADC_ExternalTrigConvEdge
-	* @param externalTrigConv Corresponds to @ref ADC_InitTypeDef.ADC_ExternalTrigConv
-	* @param dataAlign Corresponds to @ref ADC_InitTypeDef.ADC_DataAlign
-	* @param nbrOfConversion Corresponds to @ref ADC_InitTypeDef.ADC_NbrOfConversion
-	* @param channel Corresponds to the ADC_Channel parameter of @ref ADC_RegularChannelConfig
-	* @param rank Corresponds to the Rank parameter of @ref ADC_RegularChannelConfig
-	* @param sampleTime Corresponds to the ADC_SampleTime parameter of @ref ADC_RegularChannelConfig
+		The periph_ADCx parameter corresponds to the parameter in the RCC_AHB1PeriphClockCmd function.
+
+		The parameters resolution, scanConvMode, contConvMode, externalTrigConvEdge, externalTrigConv, dataAlign and nbrOfConversion all
+		correspond to the parameters of the ADC_InitTypeDef struct used to initialize the specific ADC component.
+
+		The parameters ADCx, channel, rank, and sampleTime correspond to the parameters of the ADC_RegularChannelConfig funtion used to configure
+		the ADC channels.
+	*
+	* @param ADCx Where x can be 1, 2 or 3 to select the ADC peripheral.
+	* @param periph_ADCx Specifies the AHB1 peripheral to gates its clock.
+	* @param resolution Configures the ADC resolution dual mode.
+	* @param scanConvMode Specifies whether the conversion is performed in Scan (multichannels) 
+                                               or Single (one channel) mode.
+												This parameter can be set to ENABLE or DISABLE
+	* @param contConvMode Specifies whether the conversion is performed in Continuous or Single mode.
+                        This parameter can be set to ENABLE or DISABLE.
+	* @param externalTrigConvEdge Select the external trigger edge and enable the trigger of a regular group.
+	* @param externalTrigConv Select the external event used to trigger the start of conversion of a regular group.
+	* @param dataAlign Specifies whether the ADC data  alignment is left or right.
+	* @param nbrOfConversion Specifies the number of ADC conversions
+                                               that will be done using the sequencer for
+                                               regular channel group.
+                                               This parameter must range from 1 to 16.
+	* @param channel The ADC channel to configure.
+	* @param rank The rank in the regular group sequencer.
+  *          		This parameter must be between 1 to 16.
+	* @param sampleTime The sample time value to be set for the selected channel.
 	* @retval None.
 	*/
 void configInit_ADC(ADC_TypeDef* ADCx,
