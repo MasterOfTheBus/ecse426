@@ -11,7 +11,7 @@
 	*/
 static volatile uint_fast16_t ticks;
 
-#define threshold_temp 55
+#define threshold_temp 55 /**< The threshold temperature before the alarm goes off */
 
 int main(){
 	ticks = 0; // Indicate an iterrupt
@@ -19,7 +19,7 @@ int main(){
 	int LED_count = 0; // Choose which LED to enable
 	
 	// Variables to convert voltage to temperature
-	float temp_C;
+	float temp_C = temp_ref;
 	
 	//Initialize the kalman state
 	kalman_state kstate = {0.0025, 5.0, 1100.0, 0.0, 0.0};
@@ -37,8 +37,9 @@ int main(){
 	configInit_common_ADC(ADC_Mode_Independent, ADC_Prescaler_Div2,
 												ADC_DMAAccessMode_Disabled, ADC_TwoSamplingDelay_5Cycles);
 	
+	uint8_t temp;
 	configInit_ADC(ADC1, RCC_APB2Periph_ADC1, ADC_Resolution_12b, DISABLE, DISABLE,
-								 ADC_ExternalTrigConvEdge_None, ADC_DataAlign_Right, 1, ADC_Channel_16,
+								 ADC_ExternalTrigConvEdge_None, temp, ADC_DataAlign_Right, 1, ADC_Channel_16,
 								 1, ADC_SampleTime_480Cycles);
 	
 	//Enable temperatur sensor - Set the TSVREFE bit
@@ -56,9 +57,10 @@ int main(){
 			if (Kalmanfilter_C(getTemp(), &f_output, &kstate) != 0) {
 				continue;
 			}
-		
+			printf("filtered: %f\n", f_output);
 			// Convert to temperature
 			temp_C = voltage2temp(f_output);
+			printf("temp: %f\n", temp_C);
 		}
 		// Temperature display
 		if(temp_C <= threshold_temp){
@@ -72,7 +74,7 @@ int main(){
 				temp_ref -= 2;
 			}
 
-			DisplaySingleLED(LED_count, GPIOD);
+			DisplaySingleLED(LED_count);
 		}
 		
 		// Overheating alarm
