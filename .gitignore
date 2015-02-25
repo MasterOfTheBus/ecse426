@@ -10,3 +10,5 @@ MicroP-Lab1/*uv*
 *object*
 *.7z
 *build_log.htm
+obj
+lst
