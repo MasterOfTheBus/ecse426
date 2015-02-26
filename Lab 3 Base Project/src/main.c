@@ -2,6 +2,7 @@
 #include "stm32f4xx.h"                  // Device header
 #include "stm32f4xx_conf.h"
 #include "tilt_detection.h"
+#include "interrupt.h"
 
 int main(){
 
@@ -13,17 +14,22 @@ int main(){
 									 LIS302DL_SENSITIVITY_2_3G, // We won't get up to 9 g's of force in this lab
 									 temp); // self test?
 	
-	
+	InitInterrupt();
 	
 	while(1){
 		// interrupt
-		
-		// sample
-		
-		// logic
+		if (EXTI_GetFlagStatus(EXTI_Line0) == SET) {
+			EXTI_ClearFlag(EXTI_Line0);
+			
+			// sample
+			int xyz[3];
+			getTilt(ALPHA, xyz);
+			
+			printf("x: %i, y: %i, z: %i\n", xyz[0], xyz[1], xyz[2]);
+			
+			// logic
+		}
 	}
 	
 	return 0;
 }
-
-

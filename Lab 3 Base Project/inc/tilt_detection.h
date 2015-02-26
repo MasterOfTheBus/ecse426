@@ -25,5 +25,5 @@ void Accel_InitConfig(uint8_t Power,
 	@params type Specify alpha or beta tilt.
 	@retval Return the tilt angle
 	*/
-int getTilt(uint8_t type);
+int getTilt(uint8_t type, int xyz[]);
 int32_t calcAcceleration(uint8_t *buffer, uint8_t crtl);
