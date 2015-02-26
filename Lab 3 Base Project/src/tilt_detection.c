@@ -14,20 +14,13 @@ void Accel_InitConfig(uint8_t Power,
   accel_init.Full_Scale = FullScale;
 	accel_init.Self_Test = SelfTest;
 	LIS302DL_Init(&accel_init);
-												
-	// The low level init helper method in the init function doesn't initialize with the speed that we want
-	// re-init GPIO port e
-	/* Configure GPIO PINs to detect Interrupts */
-	GPIO_InitTypeDef GPIO_InitStructure;
-  GPIO_InitStructure.GPIO_Pin = LIS302DL_SPI_INT1_PIN;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
-  GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz; // match sample rate
-  GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_DOWN; // by default read 0, not floating
-  GPIO_Init(LIS302DL_SPI_INT1_GPIO_PORT, &GPIO_InitStructure);
-  
-  GPIO_InitStructure.GPIO_Pin = LIS302DL_SPI_INT2_PIN;
-  GPIO_Init(LIS302DL_SPI_INT2_GPIO_PORT, &GPIO_InitStructure);
+	
+	/* Required delay for the MEMS Accelerometre: Turn-on time = 3/Output data Rate 
+                                                             = 3/100 = 30ms */
+	int i = 0;
+  while(i<30) {
+		i++;
+	}
 }
 
 int getTilt(uint8_t type, int xyz[]) {
@@ -51,7 +44,6 @@ int getTilt(uint8_t type, int xyz[]) {
 	xyz[0] = *buffer_num;
 	xyz[1] = *buffer_denom;
 	xyz[2] = *buffer_z;
-	
 	return 0;
 }
 
