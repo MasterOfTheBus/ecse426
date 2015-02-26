@@ -4,3 +4,4 @@
 static int accel_interrupt;
 
 void InitInterrupt(void);
+void EXTI0_IRQHandler(void);

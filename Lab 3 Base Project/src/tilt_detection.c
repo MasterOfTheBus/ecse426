@@ -21,6 +21,9 @@ void Accel_InitConfig(uint8_t Power,
   while(i<30) {
 		i++;
 	}
+	
+	uint8_t ctrl = 0x04;
+	LIS302DL_Write(&ctrl, LIS302DL_CTRL_REG3_ADDR, 1);
 }
 
 int getTilt(uint8_t type, int xyz[]) {

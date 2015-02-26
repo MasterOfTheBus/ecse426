@@ -1,5 +1,6 @@
 #include "interrupt.h"
 #include "lis302dl.h"
+#include <stdio.h>
 
 void InitInterrupt() {
 	accel_interrupt = 0;
@@ -13,12 +14,13 @@ void InitInterrupt() {
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN; // input from GPIO
   GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz; // match sample rate
-  GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_DOWN; // by default read 0, not floating
+  GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_NOPULL;//DOWN; // by default read 0, not floating
   GPIO_Init(LIS302DL_SPI_INT1_GPIO_PORT, &GPIO_InitStructure);
   
+	/*
   GPIO_InitStructure.GPIO_Pin = LIS302DL_SPI_INT2_PIN;
   GPIO_Init(LIS302DL_SPI_INT2_GPIO_PORT, &GPIO_InitStructure);
-	
+	*/
 	SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOE, EXTI_PinSource0);
 	
 	EXTI_InitTypeDef exti_init;
@@ -30,13 +32,14 @@ void InitInterrupt() {
 	
 	NVIC_InitTypeDef nvic_init;
 	nvic_init.NVIC_IRQChannel = EXTI0_IRQn; // exti line 0
-	nvic_init.NVIC_IRQChannelPreemptionPriority = 1; // highest priority
-	nvic_init.NVIC_IRQChannelSubPriority = 1; // highest priority
+	nvic_init.NVIC_IRQChannelPreemptionPriority = 0x01; // highest priority
+	nvic_init.NVIC_IRQChannelSubPriority = 0x01; // highest priority
 	nvic_init.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&nvic_init);
 }
 
-extern void EXTI0_IRQHandler(void) {
+void EXTI0_IRQHandler(void) {
+	printf("handler\n");
 	if (EXTI_GetITStatus(EXTI_Line0) != RESET) {
 		accel_interrupt = 1;
 		
