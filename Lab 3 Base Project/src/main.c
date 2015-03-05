@@ -4,6 +4,7 @@
 #include "tilt_detection.h"
 #include "interrupt.h"
 #include "UI.h"
+#include "stm32f4xx_tim.h"
 
 int main(){
 /**
@@ -54,22 +55,35 @@ int main(){
 	*																PB11(black)	PB12(purple)	PB13(blue)	PB14(green)	PB15(yellow)	PD8(orange)		PD9(red)	PD10(brown)
 	*																PE7(black)	PE8(purple)		PE9(blue)		PE10(green)	PE11(yellow)	PE12(orange)	PE13(red)	PE14(brown)															
 	*/
-	Timer_config(	0x0000,								// currently set at default
+	Timer_config(	40000,								// currently set at default
 								TIM_CounterMode_Up,
-								0xFFFFFFFF, 
+								500, 
 								TIM_CKD_DIV1, 
 								0x0000); 
-	
-	
+	// configure I/O for 7-segment display
+	configInit_GPIO(GPIOB, RCC_AHB1Periph_GPIOB,
+									GPIO_Pin_11 | GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15,
+									GPIO_Mode_OUT, GPIO_Speed_100MHz, GPIO_OType_PP,
+									GPIO_PuPd_DOWN);
+									
+	configInit_GPIO(GPIOD, RCC_AHB1Periph_GPIOD,
+									GPIO_Pin_8 | GPIO_Pin_9 | GPIO_Pin_10,
+									GPIO_Mode_OUT, GPIO_Speed_100MHz, GPIO_OType_PP,
+									GPIO_PuPd_DOWN);
 
-	
-	
+	configInit_GPIO(GPIOE, RCC_AHB1Periph_GPIOE,
+									GPIO_Pin_7 | GPIO_Pin_8 | GPIO_Pin_9 | GPIO_Pin_10 | GPIO_Pin_11 | GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14,
+									GPIO_Mode_OUT, GPIO_Speed_100MHz, GPIO_OType_PP,
+									GPIO_PuPd_DOWN);
+				
 	while(1){
 			if (accel_interrupt) {
 				int xyz[3];
 				getTilt(ALPHA, xyz);
 				printf("x: %i, y: %i, z: %i\n", xyz[0], xyz[1], xyz[2]);
 			}
+			
+		Display();
 	
 	}
 	
