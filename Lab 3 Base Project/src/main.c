@@ -6,6 +6,9 @@
 #include "UI.h"
 
 int main(){
+	
+	//int interrupt = 0;
+	
 /**
 	*	@brief Tilt detection using STM32F407VG (Accelerometer version M8997B)
 	*	
@@ -59,15 +62,14 @@ int main(){
 								0xFFFFFFFF, 
 								TIM_CKD_DIV1, 
 								0x0000); 
-	
-	
 
 	
-	
 	while(1){
-			if (accel_interrupt) {
-				int xyz[3];
-				getTilt(ALPHA, xyz);
+			if (accel_interrupt == 1) {
+				printf("loop if\n");
+				accel_interrupt = 0;
+				uint8_t xyz[3];
+				getXYZData(xyz);
 				printf("x: %i, y: %i, z: %i\n", xyz[0], xyz[1], xyz[2]);
 			}
 	

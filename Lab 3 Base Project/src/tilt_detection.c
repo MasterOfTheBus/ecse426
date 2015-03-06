@@ -1,5 +1,6 @@
 #include "tilt_detection.h"
 #include "math.h"
+#include <stdio.h>
 
 void Accel_InitConfig(uint8_t Power,
 											uint8_t DataRate,
@@ -26,6 +27,13 @@ void Accel_InitConfig(uint8_t Power,
 	LIS302DL_Write(&ctrl, LIS302DL_CTRL_REG3_ADDR, 1);
 }
 
+void getXYZData(uint8_t data[]) {
+	LIS302DL_Read(&data[0], LIS302DL_OUT_X_ADDR, 1);
+	LIS302DL_Read(&data[1], LIS302DL_OUT_Y_ADDR, 1);
+	LIS302DL_Read(&data[2], LIS302DL_OUT_Z_ADDR, 1);
+}
+
+// TODO: rewrite
 int getTilt(uint8_t type, int xyz[]) {
 	uint8_t *buffer_num;
 	uint8_t *buffer_denom;

@@ -20,6 +20,10 @@ void Accel_InitConfig(uint8_t Power,
 											uint8_t SelfTest);
 
 /**
+
+	*/
+void getXYZData(uint8_t data[]);
+/**
 	@brief Get the tilt of the board
 
 	@params type Specify alpha or beta tilt.

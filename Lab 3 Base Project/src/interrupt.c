@@ -14,7 +14,7 @@ void InitInterrupt() {
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN; // input from GPIO
   GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz; // match sample rate
-  GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_NOPULL;//DOWN; // by default read 0, not floating
+  GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_NOPULL; // by default read 0, not floating
   GPIO_Init(LIS302DL_SPI_INT1_GPIO_PORT, &GPIO_InitStructure);
   
 	/*
@@ -35,12 +35,13 @@ void InitInterrupt() {
 	nvic_init.NVIC_IRQChannelPreemptionPriority = 0x01; // highest priority
 	nvic_init.NVIC_IRQChannelSubPriority = 0x01; // highest priority
 	nvic_init.NVIC_IRQChannelCmd = ENABLE;
-	NVIC_Init(&nvic_init);
+	NVIC_Init(&nvic_init);	
 }
 
 void EXTI0_IRQHandler(void) {
 	printf("handler\n");
 	if (EXTI_GetITStatus(EXTI_Line0) != RESET) {
+		printf("handler2\n");
 		accel_interrupt = 1;
 		
 		EXTI_ClearITPendingBit(EXTI_Line0);
