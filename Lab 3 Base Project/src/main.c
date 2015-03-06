@@ -8,8 +8,6 @@
 
 int main(){
 	
-	//int interrupt = 0;
-	
 /**
 	*	@brief Tilt detection using STM32F407VG (Accelerometer version M8997B)
 	*	
@@ -79,11 +77,12 @@ int main(){
 									GPIO_Pin_7 | GPIO_Pin_8 | GPIO_Pin_9 | GPIO_Pin_10 | GPIO_Pin_11 | GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14,
 									GPIO_Mode_OUT, GPIO_Speed_100MHz, GPIO_OType_PP,
 									GPIO_PuPd_DOWN);
-				
+	
+	EXTI_GenerateSWInterrupt(EXTI_Line0); // generate an interrupt to initialize the process
+	
 	while(1){
-			if (accel_interrupt == 1) {
-				printf("loop if\n");
-				accel_interrupt = 0;
+			if (getITStatus()) {
+				setITStatus(0);
 				uint8_t xyz[3];
 				getXYZData(xyz);
 				printf("x: %i, y: %i, z: %i\n", xyz[0], xyz[1], xyz[2]);

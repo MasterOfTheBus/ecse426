@@ -2,6 +2,14 @@
 #include "lis302dl.h"
 #include <stdio.h>
 
+void setITStatus(int set) {
+	accel_interrupt = set;
+}
+
+int getITStatus() {
+	return accel_interrupt;
+}
+
 void InitInterrupt() {
 	accel_interrupt = 0;
 	
@@ -39,9 +47,7 @@ void InitInterrupt() {
 }
 
 void EXTI0_IRQHandler(void) {
-	printf("handler\n");
 	if (EXTI_GetITStatus(EXTI_Line0) != RESET) {
-		printf("handler2\n");
 		accel_interrupt = 1;
 		
 		EXTI_ClearITPendingBit(EXTI_Line0);
