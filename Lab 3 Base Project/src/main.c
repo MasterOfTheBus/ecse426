@@ -3,11 +3,12 @@
 #include "stm32f4xx_conf.h"
 #include "tilt_detection.h"
 #include "interrupt.h"
+#include "kalman.h"
 #include "UI.h"
 #include "stm32f4xx_tim.h"
 
 int main(){
-	
+
 /**
 	*	@brief Tilt detection using STM32F407VG (Accelerometer version M8997B)
 	*	
@@ -43,7 +44,10 @@ int main(){
 	*														k =
 	*														p =
 	*/		
-		
+
+	kalman_state kstate_X = {1,1,0,0,0};
+	kalman_state kstate_Y = {1,1,0,0,0};
+	kalman_state kstate_Z = {1,1,0,0,0};
 
 
 /**
@@ -83,15 +87,25 @@ int main(){
 	while(1){
 			if (getITStatus()) {
 				setITStatus(0);
+
 				uint8_t xyz[3];
 				getXYZData(xyz);
-				printf("x: %i, y: %i, z: %i\n", xyz[0], xyz[1], xyz[2]);
+				printf("%i, %i, %i\n", xyz[0], xyz[1], xyz[2]);
+
+				float f_xyz[3];
+
+				Kalmanfilter_C(xyz[0], &f_xyz[0], &kstate_X); // X
+				Kalmanfilter_C(xyz[1], &f_xyz[1], &kstate_Y); // Y
+				Kalmanfilter_C(xyz[2], &f_xyz[2], &kstate_Z); // Z
+
+				float tilt = getTilt(ALPHA, f_xyz);
+
 			}
-			
+
 		Display();
-	
+
 	}
-	
+
 	return 0;
 }
 

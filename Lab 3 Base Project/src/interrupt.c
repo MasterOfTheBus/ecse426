@@ -49,7 +49,7 @@ void InitInterrupt() {
 void EXTI0_IRQHandler(void) {
 	if (EXTI_GetITStatus(EXTI_Line0) != RESET) {
 		accel_interrupt = 1;
-		
+
 		EXTI_ClearITPendingBit(EXTI_Line0);
 	}
 }

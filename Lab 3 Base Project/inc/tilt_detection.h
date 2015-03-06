@@ -29,5 +29,5 @@ void getXYZData(uint8_t data[]);
 	@params type Specify alpha or beta tilt.
 	@retval Return the tilt angle
 	*/
-int getTilt(uint8_t type, int xyz[]);
-int32_t calcAcceleration(uint8_t *buffer, uint8_t crtl);
+float getTilt(uint8_t type, float xyz[]);
+float calcAcceleration(float input);
