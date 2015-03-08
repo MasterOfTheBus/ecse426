@@ -20,10 +20,14 @@ void Accel_InitConfig(uint8_t Power,
 											uint8_t SelfTest);
 
 /**
+
+	*/
+void getXYZData(uint8_t data[]);
+/**
 	@brief Get the tilt of the board
 
 	@params type Specify alpha or beta tilt.
 	@retval Return the tilt angle
 	*/
-int getTilt(uint8_t type, int xyz[]);
-int32_t calcAcceleration(uint8_t *buffer, uint8_t crtl);
+float getTilt(uint8_t type, float xyz[]);
+float calcAcceleration(float input);
