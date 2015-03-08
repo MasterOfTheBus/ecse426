@@ -16,13 +16,13 @@ int main(){
 	*/
 	
 	//------------------Configuation and Initialization----------------------------
-//	Accel_InitConfig(LIS302DL_LOWPOWERMODE_ACTIVE, // power on the mems sensor
-//									 LIS302DL_DATARATE_100, // Data rate at 100 Hz as specified
-//									 LIS302DL_X_ENABLE | LIS302DL_Y_ENABLE | LIS302DL_Z_ENABLE,  // Enable all the axes
-//									 LIS302DL_SENSITIVITY_2_3G, // We won't get up to 9 g's of force in this lab
-//									 LIS302DL_SELFTEST_NORMAL); // self test?
-//	
-//	InitInterrupt();
+	Accel_InitConfig(LIS302DL_LOWPOWERMODE_ACTIVE, // power on the mems sensor
+									 LIS302DL_DATARATE_100, // Data rate at 100 Hz as specified
+									 LIS302DL_X_ENABLE | LIS302DL_Y_ENABLE | LIS302DL_Z_ENABLE,  // Enable all the axes
+									 LIS302DL_SENSITIVITY_2_3G, // We won't get up to 9 g's of force in this lab
+									 LIS302DL_SELFTEST_NORMAL); // self test?
+	
+	InitInterrupt();
 	
 	
 /**
@@ -72,11 +72,11 @@ int main(){
 	
 					
 	while(1){
-//			if (accel_interrupt) {
-//				int xyz[3];
-//				getTilt(ALPHA, xyz);
-//				printf("x: %i, y: %i, z: %i\n", xyz[0], xyz[1], xyz[2]);
-//			}
+			if (accel_interrupt) {
+				int xyz[3];
+				getTilt(ALPHA, xyz);
+				printf("x: %i, y: %i, z: %i\n", xyz[0], xyz[1], xyz[2]);
+			}
 			
 		Display(n);
 	
