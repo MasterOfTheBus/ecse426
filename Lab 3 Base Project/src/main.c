@@ -5,7 +5,7 @@
 #include "interrupt.h"
 #include "UI.h"
 #include "stm32f4xx_tim.h"
-
+float n=678;
 int main(){
 /**
 	*	@brief Tilt detection using STM32F407VG (Accelerometer version M8997B)
@@ -16,13 +16,13 @@ int main(){
 	*/
 	
 	//------------------Configuation and Initialization----------------------------
-	Accel_InitConfig(LIS302DL_LOWPOWERMODE_ACTIVE, // power on the mems sensor
-									 LIS302DL_DATARATE_100, // Data rate at 100 Hz as specified
-									 LIS302DL_X_ENABLE | LIS302DL_Y_ENABLE | LIS302DL_Z_ENABLE,  // Enable all the axes
-									 LIS302DL_SENSITIVITY_2_3G, // We won't get up to 9 g's of force in this lab
-									 LIS302DL_SELFTEST_NORMAL); // self test?
-	
-	InitInterrupt();
+//	Accel_InitConfig(LIS302DL_LOWPOWERMODE_ACTIVE, // power on the mems sensor
+//									 LIS302DL_DATARATE_100, // Data rate at 100 Hz as specified
+//									 LIS302DL_X_ENABLE | LIS302DL_Y_ENABLE | LIS302DL_Z_ENABLE,  // Enable all the axes
+//									 LIS302DL_SENSITIVITY_2_3G, // We won't get up to 9 g's of force in this lab
+//									 LIS302DL_SELFTEST_NORMAL); // self test?
+//	
+//	InitInterrupt();
 	
 	
 /**
@@ -55,45 +55,37 @@ int main(){
 	*																PB11(black)	PB12(purple)	PB13(blue)	PB14(green)	PB15(yellow)	PD8(orange)		PD9(red)	PD10(brown)
 	*																PE7(black)	PE8(purple)		PE9(blue)		PE10(green)	PE11(yellow)	PE12(orange)	PE13(red)	PE14(brown)															
 	*/
-	Timer_config(	40000,								// currently set at default
+	
+	
+	GPIO_config();	
+	
+	Timer_config(	3000,								// prescaler
 								TIM_CounterMode_Up,
-								500, 
+								500, 									// period
 								TIM_CKD_DIV1, 
-								0x0000); 
-	// configure I/O for 7-segment display
-	configInit_GPIO(GPIOB, RCC_AHB1Periph_GPIOB,
-									GPIO_Pin_11 | GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15,
-									GPIO_Mode_OUT, GPIO_Speed_100MHz, GPIO_OType_PP,
-									GPIO_PuPd_DOWN);
-									
-	configInit_GPIO(GPIOD, RCC_AHB1Periph_GPIOD,
-									GPIO_Pin_8 | GPIO_Pin_9 | GPIO_Pin_10,
-									GPIO_Mode_OUT, GPIO_Speed_100MHz, GPIO_OType_PP,
-									GPIO_PuPd_DOWN);
+								0); 
+	EnableTimerInterrupt();
+	
 
-	configInit_GPIO(GPIOE, RCC_AHB1Periph_GPIOE,
-									GPIO_Pin_7 | GPIO_Pin_8 | GPIO_Pin_9 | GPIO_Pin_10 | GPIO_Pin_11 | GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14,
-									GPIO_Mode_OUT, GPIO_Speed_100MHz, GPIO_OType_PP,
-									GPIO_PuPd_DOWN);
-				
+
+
+	
+					
 	while(1){
-			if (accel_interrupt) {
-				int xyz[3];
-				getTilt(ALPHA, xyz);
-				printf("x: %i, y: %i, z: %i\n", xyz[0], xyz[1], xyz[2]);
-			}
+//			if (accel_interrupt) {
+//				int xyz[3];
+//				getTilt(ALPHA, xyz);
+//				printf("x: %i, y: %i, z: %i\n", xyz[0], xyz[1], xyz[2]);
+//			}
 			
-		Display();
+		Display(n);
 	
 	}
 	
+
 	return 0;
 }
 
-/**
-	*	@brief Interrupt Handler
-	*	
-	*	- MEMs sensor controled interrupts
-	*	- Used to control:	when data is ready
-	*											when 7-segment display should be updated
-	*/
+
+
+

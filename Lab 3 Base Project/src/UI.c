@@ -3,6 +3,13 @@
 #include "stm32f4xx_conf.h"
 #include "UI.h"
 
+int timerValue;	
+int digits[3] = {0};
+int i;
+int m;
+int decimal;
+int setTime = 160;
+
 
 /**
 	*	@brief Hardware Timer
@@ -12,7 +19,7 @@
 	*	- Use specific bus clock (RCC driver): TimerClockingFrequency / (Period x prescalar) = desired rate
 	*/	
 	
-int timerValue;	
+
 
 void Timer_config(uint16_t Prescaler,
 									uint16_t CounterMode,
@@ -32,8 +39,297 @@ void Timer_config(uint16_t Prescaler,
 	
 	TIM_TimeBaseInit(TIM3, &timer_init);
 	TIM_Cmd(TIM3, ENABLE);
+	TIM_ITConfig(TIM3, TIM_IT_Update, ENABLE); // enable interrupt
+}
+
+void EnableTimerInterrupt(){
+	NVIC_InitTypeDef nvic_init;
+	nvic_init.NVIC_IRQChannel = TIM3_IRQn;
+	nvic_init.NVIC_IRQChannelPreemptionPriority = 0x00;
+	nvic_init.NVIC_IRQChannelSubPriority = 0x01;
+	nvic_init.NVIC_IRQChannelCmd = ENABLE;
+	NVIC_Init(&nvic_init);
+}
+
+void TIM3_IRQHandler(){
+	printf("TIM3 interrupt\n");
+	if (TIM_GetITStatus(TIM3, TIM_IT_Update) != RESET){
+		printf("TIM3 interrupt inside\n");
+		TIM3_interrupt = 1;
+		TIM_ClearITPendingBit(TIM3, TIM_IT_Update);
+		
+	}
+}
+void Display(float n){
+	
+	if (TIM3_interrupt==1){
+		m = (int)(n); 			// extract integer part
+		n = n-(float)(m);		// extract floating point part
+		
+		if (m>=100){
+			decimal = 0;					// ignore any floating point
+		}
+		else{
+			decimal = 1;
+			m = m*10 + (int)(n*10);
+		}
+		
+		for (i=0; i<3;i++){
+			digits[i] = (char)(m%10);
+			m = (m-(m%10))/10;
+		}
+		printf ("%i %i %i",digits[2], digits[1], digits[0]);
+
+		// Get hardware timer value
+		timerValue = TIM_GetCounter(TIM3);
+		
+		
+		// Set first digit
+			while (TIM_GetCounter(TIM3) < (timerValue+1*setTime)){
+			GPIO_WriteBit(GPIOE, GPIO_Pin_8 | GPIO_Pin_10 | GPIO_Pin_12 | GPIO_Pin_14, Bit_SET); // Release other select lines
+			GPIO_WriteBit(GPIOD, GPIO_Pin_9, Bit_SET);
+			GPIO_WriteBit(GPIOE, GPIO_Pin_7, Bit_RESET);		// Select digit 1
+			GPIO_WriteBit(GPIOE, GPIO_Pin_13 , Bit_RESET);	// Reset decimal point
+			
+			if (digits[2]==0)
+				Zero();
+			else if (digits[2]==1)
+				One();
+			else if (digits[2]==2)
+				Two();
+			else if (digits[2]==3)
+				Three();
+			else if (digits[2]==4)
+				Four();
+			else if (digits[2]==5)
+				Five();
+			else if (digits[2]==6)
+				Six();
+			else if (digits[2]==7)
+				Seven();
+			else if (digits[2]==8)
+				Eight();
+			else
+				Nine();
+		}
+		
+		
+		// Set second digit
+		while (TIM_GetCounter(TIM3) < (timerValue+2*setTime)){
+			GPIO_WriteBit(GPIOE, GPIO_Pin_7 | GPIO_Pin_10 | GPIO_Pin_12 | GPIO_Pin_14, Bit_SET); // Release other select lines
+			GPIO_WriteBit(GPIOD, GPIO_Pin_9, Bit_SET);
+			GPIO_WriteBit(GPIOE, GPIO_Pin_8, Bit_RESET);		// Select digit 2
+			
+			if (decimal){
+				GPIO_WriteBit(GPIOE, GPIO_Pin_13 , Bit_SET);	// Set decimal point
+			}
+			
+			if (digits[1]==0)
+				Zero();
+			else if (digits[1]==1)
+				One();
+			else if (digits[1]==2)
+				Two();
+			else if (digits[1]==3)
+				Three();
+			else if (digits[1]==4)
+				Four();
+			else if (digits[1]==5)
+				Five();
+			else if (digits[1]==6)
+				Six();
+			else if (digits[1]==7)
+				Seven();
+			else if (digits[1]==8)
+				Eight();
+			else
+				Nine();
+			
+		}
+		
+		// Set third digit
+		while (TIM_GetCounter(TIM3) < (timerValue+3*setTime)){
+			GPIO_WriteBit(GPIOE, GPIO_Pin_7 | GPIO_Pin_8 | GPIO_Pin_10 | GPIO_Pin_14, Bit_SET); // Release other select lines
+			GPIO_WriteBit(GPIOD, GPIO_Pin_9, Bit_SET);
+			GPIO_WriteBit(GPIOE, GPIO_Pin_12, Bit_RESET);		// Select digit 3
+			GPIO_WriteBit(GPIOE, GPIO_Pin_13 , Bit_RESET);	// Reset decimal point
+				
+			if (digits[0]==0)
+				Zero();
+			else if (digits[0]==1)
+				One();
+			else if (digits[0]==2)
+				Two();
+			else if (digits[0]==3)
+				Three();
+			else if (digits[0]==4)
+				Four();
+			else if (digits[0]==5)
+				Five();
+			else if (digits[0]==6)
+				Six();
+			else if (digits[0]==7)
+				Seven();
+			else if (digits[0]==8)
+				Eight();
+			else
+				Nine();
+			
+		}
+		
+		// Set degree
+		GPIO_WriteBit(GPIOE, GPIO_Pin_7 | GPIO_Pin_8 | GPIO_Pin_10 | GPIO_Pin_12 | GPIO_Pin_14, Bit_SET); // Release other select lines
+		GPIO_WriteBit(GPIOD, GPIO_Pin_9, Bit_RESET);	// Select degree
+		
+		GPIO_WriteBit(GPIOD, GPIO_Pin_10 , Bit_SET);	// Turn on degree LED
+		
+		TIM3_interrupt = 0;
+	}
+
 }
 	
+void Zero(){
+
+	// Turn on:
+	GPIO_WriteBit(GPIOB, GPIO_Pin_11 | GPIO_Pin_13 | GPIO_Pin_14, Bit_SET);
+	GPIO_WriteBit(GPIOD, GPIO_Pin_8, Bit_SET);
+	GPIO_WriteBit(GPIOE, GPIO_Pin_9 | GPIO_Pin_11, Bit_SET);
+	// Turn off:
+	GPIO_WriteBit(GPIOB, GPIO_Pin_12 | GPIO_Pin_15, Bit_RESET);
+	GPIO_WriteBit(GPIOD, GPIO_Pin_10 , Bit_RESET);
+
+}
+
+void One(){
+	
+	// Turn on:
+	GPIO_WriteBit(GPIOB, GPIO_Pin_11 | GPIO_Pin_14, Bit_SET);
+	// Turn off:
+	GPIO_WriteBit(GPIOB, GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_15, Bit_RESET);
+	GPIO_WriteBit(GPIOD, GPIO_Pin_8 | GPIO_Pin_10 , Bit_RESET);
+	GPIO_WriteBit(GPIOE, GPIO_Pin_9 | GPIO_Pin_11 , Bit_RESET);
+	
+}
+
+void Two(){
+	
+	// Turn on:
+	GPIO_WriteBit(GPIOB, GPIO_Pin_11 | GPIO_Pin_12 | GPIO_Pin_13, Bit_SET);
+	GPIO_WriteBit(GPIOE, GPIO_Pin_9 | GPIO_Pin_11, Bit_SET);
+	// Turn off:
+	GPIO_WriteBit(GPIOB, GPIO_Pin_14 | GPIO_Pin_15, Bit_RESET);
+	GPIO_WriteBit(GPIOD, GPIO_Pin_8 | GPIO_Pin_10 , Bit_RESET);
+
+}
+
+void Three(){
+	
+	// Turn on;
+	GPIO_WriteBit(GPIOB, GPIO_Pin_11 | GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14, Bit_SET);
+	GPIO_WriteBit(GPIOE, GPIO_Pin_9, Bit_SET);
+	// Turn off:
+	GPIO_WriteBit(GPIOB, GPIO_Pin_15, Bit_RESET);
+	GPIO_WriteBit(GPIOD, GPIO_Pin_8 | GPIO_Pin_10 , Bit_RESET);
+	GPIO_WriteBit(GPIOE, GPIO_Pin_11, Bit_RESET);
+
+}
+
+void Four(){
+	
+	// Turn on;
+	GPIO_WriteBit(GPIOB, GPIO_Pin_11 | GPIO_Pin_12 | GPIO_Pin_14, Bit_SET);
+	GPIO_WriteBit(GPIOD, GPIO_Pin_8, Bit_SET);
+	// Turn off:
+	GPIO_WriteBit(GPIOB, GPIO_Pin_13 | GPIO_Pin_15, Bit_RESET);
+	GPIO_WriteBit(GPIOD, GPIO_Pin_10 , Bit_RESET);
+	GPIO_WriteBit(GPIOE, GPIO_Pin_9 | GPIO_Pin_11, Bit_RESET);
+	
+}
+
+
+void Five(){
+	
+	// Turn on;
+	GPIO_WriteBit(GPIOB, GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14, Bit_SET);
+	GPIO_WriteBit(GPIOD, GPIO_Pin_8, Bit_SET);
+	GPIO_WriteBit(GPIOE, GPIO_Pin_9, Bit_SET);
+	// Turn off:
+	GPIO_WriteBit(GPIOB, GPIO_Pin_11 | GPIO_Pin_15, Bit_RESET);
+	GPIO_WriteBit(GPIOD, GPIO_Pin_10 , Bit_RESET);
+	GPIO_WriteBit(GPIOE, GPIO_Pin_11, Bit_RESET);
+	
+}
+
+void Six(){
+	
+	// Turn on;
+	GPIO_WriteBit(GPIOB, GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14, Bit_SET);
+	GPIO_WriteBit(GPIOD, GPIO_Pin_8, Bit_SET);
+	GPIO_WriteBit(GPIOE, GPIO_Pin_9 | GPIO_Pin_11, Bit_SET);
+	// Turn off:
+	GPIO_WriteBit(GPIOB, GPIO_Pin_11 | GPIO_Pin_15, Bit_RESET);
+	GPIO_WriteBit(GPIOD, GPIO_Pin_10 , Bit_RESET);
+	
+}
+
+void Seven(){
+	
+	// Turn on:
+	GPIO_WriteBit(GPIOB, GPIO_Pin_11 | GPIO_Pin_13 | GPIO_Pin_14, Bit_SET);
+	// Turn off:
+	GPIO_WriteBit(GPIOB, GPIO_Pin_12 | GPIO_Pin_15, Bit_RESET);
+	GPIO_WriteBit(GPIOD, GPIO_Pin_8 | GPIO_Pin_10 , Bit_RESET);
+	GPIO_WriteBit(GPIOE, GPIO_Pin_9 | GPIO_Pin_11 , Bit_RESET);
+	
+}
+void Eight(){
+	
+	// Turn on;
+	GPIO_WriteBit(GPIOB, GPIO_Pin_11 | GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14, Bit_SET);
+	GPIO_WriteBit(GPIOD, GPIO_Pin_8, Bit_SET);
+	GPIO_WriteBit(GPIOE, GPIO_Pin_9 | GPIO_Pin_11, Bit_SET);
+	// Turn off:
+	GPIO_WriteBit(GPIOB, GPIO_Pin_15, Bit_RESET);
+	GPIO_WriteBit(GPIOD, GPIO_Pin_10 , Bit_RESET);
+	
+}	
+
+void Nine(){
+	
+	// Turn on;
+	GPIO_WriteBit(GPIOB, GPIO_Pin_11 | GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14, Bit_SET);
+	GPIO_WriteBit(GPIOD, GPIO_Pin_8, Bit_SET);
+	GPIO_WriteBit(GPIOE, GPIO_Pin_9 | GPIO_Pin_11, Bit_SET);
+	// Turn off:
+	GPIO_WriteBit(GPIOB, GPIO_Pin_15, Bit_RESET);
+	GPIO_WriteBit(GPIOD, GPIO_Pin_10 , Bit_RESET);
+	GPIO_WriteBit(GPIOE, GPIO_Pin_11, Bit_RESET);	
+}	
+	
+
+/**
+	*	@brief 7-segment display
+	*	
+	*	- Enable output pins
+	*/
+	
+void GPIO_config(){
+	// configure I/O for 7-segment display
+	configInit_GPIO(GPIOB, RCC_AHB1Periph_GPIOB,
+									GPIO_Pin_11 | GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15,
+									GPIO_Mode_OUT, GPIO_Speed_100MHz, GPIO_OType_PP,
+									GPIO_PuPd_DOWN);
+									
+	configInit_GPIO(GPIOD, RCC_AHB1Periph_GPIOD,
+									GPIO_Pin_8 | GPIO_Pin_9 | GPIO_Pin_10,
+									GPIO_Mode_OUT, GPIO_Speed_100MHz, GPIO_OType_PP,
+									GPIO_PuPd_DOWN);
+
+	configInit_GPIO(GPIOE, RCC_AHB1Periph_GPIOE,
+									GPIO_Pin_7 | GPIO_Pin_8 | GPIO_Pin_9 | GPIO_Pin_10 | GPIO_Pin_11 | GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14,
+									GPIO_Mode_OUT, GPIO_Speed_100MHz, GPIO_OType_PP,
+									GPIO_PuPd_DOWN);
+}
 
 void configInit_GPIO(GPIO_TypeDef* GPIOx,
 										 uint32_t periph_GPIOx,
@@ -65,27 +361,7 @@ void Keypad_read(){
 }
 
 
-void Display(){
-	// Get hardware timer value
-	timerValue = TIM_GetCounter(TIM3);
 
-	if (timerValue < 200){
-		GPIO_WriteBit(GPIOE, GPIO_Pin_7 | GPIO_Pin_8 | GPIO_Pin_10 | GPIO_Pin_12 | GPIO_Pin_14, Bit_RESET);
-		GPIO_WriteBit(GPIOD, GPIO_Pin_9, Bit_RESET);
-		GPIO_WriteBit(GPIOE, GPIO_Pin_9 | GPIO_Pin_11 | GPIO_Pin_13 , Bit_SET);
-		GPIO_WriteBit(GPIOB, GPIO_Pin_11 | GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15, Bit_SET);
-		GPIO_WriteBit(GPIOD, GPIO_Pin_8 | GPIO_Pin_10 , Bit_SET);
-		
-	} else if (timerValue >= 200){
-    GPIO_WriteBit(GPIOE, GPIO_Pin_7 | GPIO_Pin_8 | GPIO_Pin_10 | GPIO_Pin_12 | GPIO_Pin_14, Bit_RESET);
-		GPIO_WriteBit(GPIOD,  GPIO_Pin_9, Bit_RESET);
-		GPIO_WriteBit(GPIOE, GPIO_Pin_9 | GPIO_Pin_11 | GPIO_Pin_13 , Bit_RESET);
-		GPIO_WriteBit(GPIOB, GPIO_Pin_11 | GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15, Bit_RESET);
-		GPIO_WriteBit(GPIOD, GPIO_Pin_8 | GPIO_Pin_10 , Bit_RESET);
-	}
-	
-	return;
-}
 
 
 
