@@ -63,6 +63,8 @@ void fillYMatrix(float* y_mat, int cols, int rows) {
 
 void calibrateSensor() {
 	// initialize all the matrices to use
+	arm_mat_init_f32(&calParams, 4, 3, cal_data);
+	
 	arm_matrix_instance_f32 Y;
 	Y.numCols = 3;
 	Y.numRows = NUM_CALIBRATION_SAMPLES * 6;
@@ -116,20 +118,21 @@ void calibrateSensor() {
 	arm_mat_trans_f32(&w, &w_T);
 	
 	// wT * w
-	arm_mat_mult_f32(&w_T, &w, &calParams);	
+	arm_matrix_instance_f32 temp;
+	float temp_data[16]; // 4 * 4 square matrix from w times its transpose
+	arm_mat_init_f32(&temp, 4, 4, temp_data);
+	arm_mat_mult_f32(&w_T, &w, &temp);	
 	
 	// [wT * w] inverse
-	arm_mat_inverse_f32(&calParams, &calParams);
-	
+	arm_mat_inverse_f32(&temp, &temp);
 	
 	// [wT * w] inverse * wT
-	arm_mat_mult_f32(&calParams, &w_T, &calParams);
+	arm_mat_mult_f32(&temp, &w_T, &w_T); // the 4x4 times the transpose will result in a matrix with the same dimensions as the transpose
 	
 	// [wT * w] inverse * wT * Y
-	arm_mat_mult_f32(&calParams, &Y, &calParams);
+	arm_mat_mult_f32(&w_T, &Y, &calParams);
 	printf("calParams rows: %i, calParams cols: %i\n", calParams.numRows, calParams.numCols);
 
-	
 	i = 0;
 	for (; i < 4; i++) {
 		printf("%f %f %f\n", calParams.pData[i * 4], calParams.pData[i * 4 + 1], calParams.pData[i * 4 + 2]);
