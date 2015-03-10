@@ -34,27 +34,27 @@ void fillYMatrix(float* y_mat, int cols, int rows) {
 		for (; j < rows; j++) {
 			if (i == 0) {
 				if (j >= rows * 5 / 6) {
-					y_mat[i + j * rows] = -1;
+					y_mat[i + j * cols] = -1;
 				} else if (j >= rows * 4 / 6) {
-					y_mat[i + j * rows] = 1;
+					y_mat[i + j * cols] = 1;
 				} else {
-					y_mat[i + j * rows] = 0;
+					y_mat[i + j * cols] = 0;
 				}
 			} else if (i == 1) {
 				if (j >= rows * 3 / 6 && j < rows * 4 / 6) {
-					y_mat[i + j * rows] = -1;
+					y_mat[i + j * cols] = -1;
 				} else if (j >= rows * 2 / 6 && j < rows * 4 / 6) {
-					y_mat[i + j * rows] = 1;
+					y_mat[i + j * cols] = 1;
 				} else {
-					y_mat[i + j * rows] = 0;
+					y_mat[i + j * cols] = 0;
 				}
 			} else if (i == 2) {
 				if (j >= rows / 6 && j < rows * 2 / 6) {
-					y_mat[i + j * rows] = -1;
+					y_mat[i + j * cols] = -1;
 				} else if (j < rows / 6) {
-					y_mat[i + j * rows] = 1;
+					y_mat[i + j * cols] = 1;
 				} else {
-					y_mat[i + j * rows] = 0;
+					y_mat[i + j * cols] = 0;
 				}
 			}
 		}
@@ -66,16 +66,16 @@ void calibrateSensor() {
 	arm_mat_init_f32(&calParams, 4, 3, cal_data);
 	
 	arm_matrix_instance_f32 Y;
-	Y.numCols = 3;
-	Y.numRows = NUM_CALIBRATION_SAMPLES * 6;
-	float y_data[3 * Y.numRows];
-	fillYMatrix(y_data, Y.numCols, Y.numRows);
+	float y_data[3 * NUM_CALIBRATION_SAMPLES * 6];
+	fillYMatrix(y_data, 3, 6);
 	int i = 0;
-	for (; i < Y.numRows; i++) {
-		printf("%f %f %f\n", y_data[i * Y.numRows], y_data[i * Y.numRows+1], y_data[i * Y.numRows+2]);
+	for (; i < 3 * NUM_CALIBRATION_SAMPLES * 6; i++) {
+		printf("%f ", y_data[i]);
+		if ((i+1)%3==0) {
+			printf("\n");
+		}
 	}
-	
-	Y.pData = y_data;
+	arm_mat_init_f32(&Y, 6, 3, y_data);
 	
 	arm_matrix_instance_f32 w;
 	//w.numCols = 4;
@@ -186,14 +186,18 @@ void calibrateSensor() {
 		}
 	}
 	
+	arm_matrix_instance_f32 final;
+	float final_data[12]; // inverse keeps same dimensions
+	arm_mat_init_f32(&final, 4, 3, final_data);
+	
 	// [wT * w] inverse * wT * Y
-	arm_mat_mult_f32(&multInverse, &Y, &calParams);
+	arm_mat_mult_f32(&multInverse, &Y, &final);
 
 	
 	printf("params\n");
 	i = 0;
 	for (; i < 12; i++) {
-		printf("%f\n", calParams.pData[i]);
+		printf("%f ", final.pData[i]);
 		if ((i+1) %3==0) {
 			printf("\n");
 		}
