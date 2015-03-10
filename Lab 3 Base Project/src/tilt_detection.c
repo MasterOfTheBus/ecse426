@@ -78,9 +78,9 @@ void calibrateSensor() {
 	Y.pData = y_data;
 	
 	arm_matrix_instance_f32 w;
-	w.numCols = 4;
-	w.numRows = NUM_CALIBRATION_SAMPLES * 6;
-	//float w_data[4 * w.numRows];
+	//w.numCols = 4;
+	//w.numRows = NUM_CALIBRATION_SAMPLES * 6;
+	//float w_data[4 * NUM_CALIBRATION_SAMPLES * 6];
 	float w_data[] = {228, 26, 223, 1, 228, 26, 82, 1, 227, 83, 26, 1, 229, 227, 27, 1, 172, 26, 24, 1, 27, 27, 22, 1};
 	
 	// collect accelerometer data at 6 positions	
@@ -107,15 +107,34 @@ void calibrateSensor() {
 	}
 #endif
 	
-	w.pData = w_data;
+	//w.pData = w_data;
+	arm_mat_init_f32(&w, NUM_CALIBRATION_SAMPLES * 6, 4, w_data);
+	printf("w\n");
+	i = 0;
+	for (; i < 4 * NUM_CALIBRATION_SAMPLES * 6; i++) {
+		//printf("%f %f %f\n", temp.pData[i * 4], temp.pData[i * 4 + 1], temp.pData[i * 4 + 2]);
+		printf("%f ", w.pData[i]);
+		if ((i+1)%4==0) {
+			printf("\n");
+		}
+	}
 		
 	//-----------least square method to obtain 12 parameters
 	// wT
 	arm_matrix_instance_f32 w_T;
 	float wT_data[4 * NUM_CALIBRATION_SAMPLES * 6];
-	arm_mat_init_f32(&w_T, 3, 4, wT_data);
+	arm_mat_init_f32(&w_T, 4, NUM_CALIBRATION_SAMPLES * 6, wT_data);
 	
 	arm_mat_trans_f32(&w, &w_T);
+	printf("transpose\n");
+	i = 0;
+	for (; i < 4 * NUM_CALIBRATION_SAMPLES * 6; i++) {
+		//printf("%f %f %f\n", temp.pData[i * 4], temp.pData[i * 4 + 1], temp.pData[i * 4 + 2]);
+		printf("%f ", wT_data[i]);
+		if ((i+1)%6==0) {
+			printf("\n");
+		}
+	}
 	
 	// wT * w
 	arm_matrix_instance_f32 temp;
@@ -123,19 +142,61 @@ void calibrateSensor() {
 	arm_mat_init_f32(&temp, 4, 4, temp_data);
 	arm_mat_mult_f32(&w_T, &w, &temp);	
 	
+	printf("multiply wT * w\n");
+	i = 0;
+	for (; i < 16; i++) {
+		//printf("%f %f %f\n", temp.pData[i * 4], temp.pData[i * 4 + 1], temp.pData[i * 4 + 2]);
+		printf("%f ", temp.pData[i]);
+		if ((i+1)%4==0) {
+			printf("\n");
+		}
+	}
+	
 	// [wT * w] inverse
-	arm_mat_inverse_f32(&temp, &temp);
+	arm_matrix_instance_f32 inverse;
+	float inverse_data[16]; // inverse keeps same dimensions
+	arm_mat_init_f32(&inverse, 4, 4, inverse_data);
+	arm_mat_inverse_f32(&temp, &inverse);
+	
+	
+	printf("inverse\n");
+	i = 0;
+	for (; i < 16; i++) {
+		//printf("%f %f %f\n", temp.pData[i * 4], temp.pData[i * 4 + 1], temp.pData[i * 4 + 2]);
+		printf("%f ", inverse.pData[i]);
+		if ((i+1)%4==0) {
+			printf("\n");
+		}
+	}
 	
 	// [wT * w] inverse * wT
-	arm_mat_mult_f32(&temp, &w_T, &w_T); // the 4x4 times the transpose will result in a matrix with the same dimensions as the transpose
+	arm_matrix_instance_f32 multInverse;
+	float mult_inv_data[4 * NUM_CALIBRATION_SAMPLES * 6]; // inverse keeps same dimensions
+	arm_mat_init_f32(&multInverse, 4, NUM_CALIBRATION_SAMPLES * 6, mult_inv_data);
+	arm_mat_mult_f32(&inverse, &w_T, &multInverse); // the 4x4 times the transpose will result in a matrix with the same dimensions as the transpose
+	
+	printf("multiply inverse * wT\n");
+	
+	i = 0;
+	for (; i < 4 * NUM_CALIBRATION_SAMPLES * 6; i++) {
+		//printf("%f %f %f\n", temp.pData[i * 4], temp.pData[i * 4 + 1], temp.pData[i * 4 + 2]);
+		printf("%f ", multInverse.pData[i]);
+		if ((i+1)%6==0) {
+			printf("\n");
+		}
+	}
 	
 	// [wT * w] inverse * wT * Y
-	arm_mat_mult_f32(&w_T, &Y, &calParams);
-	printf("calParams rows: %i, calParams cols: %i\n", calParams.numRows, calParams.numCols);
+	arm_mat_mult_f32(&multInverse, &Y, &calParams);
 
+	
+	printf("params\n");
 	i = 0;
-	for (; i < 4; i++) {
-		printf("%f %f %f\n", calParams.pData[i * 4], calParams.pData[i * 4 + 1], calParams.pData[i * 4 + 2]);
+	for (; i < 12; i++) {
+		printf("%f\n", calParams.pData[i]);
+		if ((i+1) %3==0) {
+			printf("\n");
+		}
 	}
 }
 
