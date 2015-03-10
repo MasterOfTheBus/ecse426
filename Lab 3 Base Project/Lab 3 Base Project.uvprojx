@@ -419,11 +419,6 @@
               <FilePath>.\src\fput_debug.c</FilePath>
             </File>
             <File>
-              <FileName>display.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\src\display.c</FilePath>
-            </File>
-            <File>
               <FileName>tilt_detection.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\tilt_detection.c</FilePath>

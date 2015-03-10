@@ -10,7 +10,8 @@
 	@params Clock division
 	@params Repetition counter
 	*/
-
+static float numDisplay;
+static int TIM3_interrupt;
 
 void Timer_config(uint16_t Prescaler,
 									uint16_t CounterMode,
@@ -18,6 +19,22 @@ void Timer_config(uint16_t Prescaler,
 									uint16_t ClockDivision,
 									uint8_t RepetitionCounter);
 
+void EnableTimerInterrupt(void);
+
+void TIM3_IRQHandler(void);
+
+void Display(float n);
+
+void Zero(void);
+void One(void);
+void Two(void);
+void Three(void);
+void Four(void);
+void Five(void);
+void Six(void);
+void Seven(void);
+void Eight(void);
+void Nine(void);
 
 /**
   * @brief Configure a GPIO port and Initialize it.
@@ -34,6 +51,7 @@ void Timer_config(uint16_t Prescaler,
   * @param puPd Specifies the operating Pull-up/Pull down for the selected pins.
 	* @retval none
   */
+void GPIO_config(void);
 void configInit_GPIO(GPIO_TypeDef* GPIOx,
 										 uint32_t periph_GPIOx,
 										 uint32_t pins,
@@ -42,4 +60,4 @@ void configInit_GPIO(GPIO_TypeDef* GPIOx,
 										 GPIOOType_TypeDef oType,
 										 GPIOPuPd_TypeDef puPd);
 
-void Display(void);
+
