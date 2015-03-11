@@ -32,8 +32,8 @@ int main(){
 	*	@brief Sensor Calibration
 	*	
 	*	- Use reset button to allow user to calibrate sensor
-	*/		
-
+	*/
+	calibrateSensor();
 	
 /**
 	*	@brief Data Filtering
@@ -80,7 +80,7 @@ int main(){
 	EnableTimerInterrupt();
 	Keypad_read();
 	// must reset user input
-	//userInput = 0;
+	// userInput = 0;
 	
 
 	
@@ -91,22 +91,28 @@ int main(){
 			if (getITStatus()) {
 				setITStatus(0);
 
-				uint8_t xyz[3];
-				getXYZData(xyz);
+				int32_t xyz[3]; // get the acc data
+				LIS302DL_ReadACC(xyz);
 				printf("%i, %i, %i\n", xyz[0], xyz[1], xyz[2]);
+				
+				float xyz_float[3];
 
+				normalize(xyz, xyz_float); // normalize the data
+				printf("%f, %f, %f\n", xyz_float[0], xyz_float[1], xyz_float[2]);
+				
 				float f_xyz[3];
 
-				Kalmanfilter_C(xyz[0], &f_xyz[0], &kstate_X); // X
-				Kalmanfilter_C(xyz[1], &f_xyz[1], &kstate_Y); // Y
-				Kalmanfilter_C(xyz[2], &f_xyz[2], &kstate_Z); // Z
+				// filter the data
+				Kalmanfilter_C(xyz_float[0], &f_xyz[0], &kstate_X); // X
+				Kalmanfilter_C(xyz_float[1], &f_xyz[1], &kstate_Y); // Y
+				Kalmanfilter_C(xyz_float[2], &f_xyz[2], &kstate_Z); // Z
 
-				float tilt = getTilt(ALPHA, f_xyz);
+				//float tilt = getTilt(ALPHA, f_xyz);
 
 			}
 
 			
-	
+
 	}
 	return 0;
 }
