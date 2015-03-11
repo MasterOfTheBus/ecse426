@@ -2,7 +2,6 @@
 #include "lis302dl.h"
 #include "arm_math.h"
 
-
 #define ALPHA (uint8_t)0
 #define BETA (uint8_t)1
 #define NUM_CALIBRATION_SAMPLES 1

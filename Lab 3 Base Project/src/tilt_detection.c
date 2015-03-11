@@ -16,14 +16,6 @@ void Accel_InitConfig(uint8_t Power,
 	accel_init.Self_Test = SelfTest;
 	LIS302DL_Init(&accel_init);
 	
-	/* Required delay for the MEMS Accelerometre: Turn-on time = 3/Output data Rate 
-                                                             = 3/100 = 30ms */
-												/*
-	int i = 0;
-  while(i<30) {
-		i++;
-	}*/
-	
 	uint8_t ctrl = 0x04;
 	LIS302DL_Write(&ctrl, LIS302DL_CTRL_REG3_ADDR, 1);
 }
@@ -62,45 +54,7 @@ void fillYMatrix(float* y_mat, int cols, int rows) {
 	}
 }
 
-void calibrateSensor() {
-	// initialize all the matrices to use
-	arm_mat_init_f32(&calParams, 4, 3, cal_data);
-	
-	arm_matrix_instance_f32 Y;
-	float y_data[3 * NUM_CALIBRATION_SAMPLES * 6];
-	fillYMatrix(y_data, 3, 6);
-	arm_mat_init_f32(&Y, 6, 3, y_data);
-	
-	arm_matrix_instance_f32 w;
-
-	//float w_data[4 * NUM_CALIBRATION_SAMPLES * 6];
-	float w_data[] = {228, 26, 223, 1, 228, 26, 82, 1, 227, 83, 26, 1, 229, 227, 27, 1, 172, 26, 24, 1, 27, 27, 22, 1};
-	
-	// collect accelerometer data at 6 positions	
-	// Zb down, Zb up, Yb down, Yb up, Xb down, Xb up
-#if 0 // the actual code, but test with some dummy values
-	int j = 1;
-	int i = 0;
-	for (; j <= 6; j++) {
-		// TODO: pause for user to adjust position
-		printf("adjust position\n");
-		
-		for (; i < j * NUM_CALIBRATION_SAMPLES; i++) {
-			int32_t data[3];
-			LIS302DL_ReadACC(data);
-		
-			int k = 0;
-			for (; k < 3; k++) {
-				w_data[i] = (float)data[k];
-				i++;
-			}
-			w_data[i] = 1;
-		}
-	}
-#endif
-
-	arm_mat_init_f32(&w, NUM_CALIBRATION_SAMPLES * 6, 4, w_data);
-	
+void calculateParameters(arm_matrix_instance_f32 w, arm_matrix_instance_f32 Y) {
 	//-----------least square method to obtain 12 parameters
 	// wT
 	arm_matrix_instance_f32 w_T;
@@ -139,6 +93,54 @@ void calibrateSensor() {
 			printf("\n");
 		}
 	}
+	printf("\n");
+}
+
+void calibrateSensor() {
+	// initialize all the matrices to use
+	arm_mat_init_f32(&calParams, 4, 3, cal_data);
+	
+	arm_matrix_instance_f32 Y;
+	float y_data[3 * NUM_CALIBRATION_SAMPLES * 6];
+	fillYMatrix(y_data, 3, 6);
+	arm_mat_init_f32(&Y, 6, 3, y_data);
+	
+	arm_matrix_instance_f32 w;
+
+	//float w_data[4 * NUM_CALIBRATION_SAMPLES * 6];
+	float w_data[] = {-504, 468, 1494, 1,
+										-504, 486, -594, 1,
+										-522, -522, 414, 1,
+										-540, 1476, 396, 1,
+										-1512, 468, 396, 1,
+										486, 486, 432, 1};
+	
+	// collect accelerometer data at 6 positions	
+	// Zb down, Zb up, Yb down, Yb up, Xb down, Xb up
+#if 0 // the actual code, but test with some dummy values
+	int j = 1;
+	int i = 0;
+	for (; j <= 6; j++) {
+		// TODO: pause for user to adjust position
+		printf("adjust position\n");
+		
+		for (; i < j * NUM_CALIBRATION_SAMPLES; i++) {
+			int32_t data[3];
+			LIS302DL_ReadACC(data);
+		
+			int k = 0;
+			for (; k < 3; k++) {
+				w_data[i] = (float)data[k];
+				i++;
+			}
+			w_data[i] = 1;
+		}
+	}
+#endif
+
+	arm_mat_init_f32(&w, NUM_CALIBRATION_SAMPLES * 6, 4, w_data);
+	
+	calculateParameters(w, Y);
 }
 
 void normalize(int32_t* data, float* output) {
@@ -154,15 +156,25 @@ void normalize(int32_t* data, float* output) {
 float getTilt(uint8_t type, float xyz[]) {
 	float top;
 	float bot;
-	if (type == ALPHA) {
+	if (type == ALPHA) { // pitch
 		top = xyz[0];
 		bot = xyz[1];
-	} else if (type == BETA) {
+	} else if (type == BETA) { // roll
 		top = xyz[1];
 		bot = xyz[0];
 	} else {
 		return (-1);
 	}
 	
-	return (atan(top / (sqrt(bot * bot + xyz[2] * xyz[2]))));
+	float degrees = (atan(top / (sqrt(bot * bot + xyz[2] * xyz[2]))) * 180 / PI);
+	
+	if (xyz[2] > 0) {
+		if (degrees < 0) {
+			degrees += 360;
+		}
+	} else if (xyz[2] < 0) {
+			degrees = 180 - degrees;
+	}
+	
+	return (degrees);
 }

@@ -25,10 +25,6 @@ void InitInterrupt() {
   GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_NOPULL; // by default read 0, not floating
   GPIO_Init(LIS302DL_SPI_INT1_GPIO_PORT, &GPIO_InitStructure);
   
-	/*
-  GPIO_InitStructure.GPIO_Pin = LIS302DL_SPI_INT2_PIN;
-  GPIO_Init(LIS302DL_SPI_INT2_GPIO_PORT, &GPIO_InitStructure);
-	*/
 	SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOE, EXTI_PinSource0);
 	
 	EXTI_InitTypeDef exti_init;
