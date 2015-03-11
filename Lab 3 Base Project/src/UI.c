@@ -9,7 +9,14 @@ int i;
 int m;
 int decimal;
 int setTime = 160;
-
+int result = 0;
+int readDigit;
+int displayUserInput = 0;
+int keypadWait = 10;
+float numDisplay;
+int userInput;
+int count;
+int lastResult;
 
 /**
 	*	@brief Hardware Timer
@@ -55,15 +62,36 @@ void TIM3_IRQHandler(){
 	printf("TIM3 interrupt\n");
 	if (TIM_GetITStatus(TIM3, TIM_IT_Update) != RESET){
 		printf("TIM3 interrupt inside\n");
-		TIM3_interrupt = 1;
+//TIM3_interrupt = 1;
+		float n;
+			n =numDisplay;
+			Display(n,userInput);
 		TIM_ClearITPendingBit(TIM3, TIM_IT_Update);
 		
 	}
 }
-void Display(float n){
+
+/**
+	*	@brief Initialize user interface using GPIO
+	*	
+	*	- Read user input from keypad	(pins LEFT TO RIGHT)
+	*																PE6(brown)	PC13(red)	PE4(orange)		PE5(yellow)	PB4(green)		PB5(blue)		PD1(purple)	PD2(black)
+	*	- Translate numbers to be displayed into control signals
+	*	- Send signals out through 7-segment display (pins from LEFT TO RIGHT)
+	*																PB11(black)	PB12(purple)	PB13(blue)	PB14(green)	PB15(yellow)	PD8(orange)		PD9(red)	PD10(brown)
+	*																PE7(black)	PE8(purple)		PE9(blue)		PE10(green)	PE11(yellow)	PE12(orange)	PE13(red)	PE14(brown)															
+	*
+	*	
+	*/
+
+void Display(float n, int input){
 	
-	if (TIM3_interrupt==1){
-		m = (int)(n); 			// extract integer part
+	if (input !=0 ){
+	 m = input;
+		decimal = 0;
+	}
+	else{
+		m = (int)n; 			// extract integer part
 		n = n-(float)(m);		// extract floating point part
 		
 		if (m>=100){
@@ -73,9 +101,10 @@ void Display(float n){
 			decimal = 1;
 			m = m*10 + (int)(n*10);
 		}
+	}
 		
 		for (i=0; i<3;i++){
-			digits[i] = (char)(m%10);
+			digits[i] = (int)(m%10);
 			m = (m-(m%10))/10;
 		}
 		printf ("%i %i %i",digits[2], digits[1], digits[0]);
@@ -86,9 +115,9 @@ void Display(float n){
 		
 		// Set first digit
 			while (TIM_GetCounter(TIM3) < (timerValue+1*setTime)){
-			GPIO_WriteBit(GPIOE, GPIO_Pin_8 | GPIO_Pin_10 | GPIO_Pin_12 | GPIO_Pin_14, Bit_SET); // Release other select lines
-			GPIO_WriteBit(GPIOD, GPIO_Pin_9, Bit_SET);
-			GPIO_WriteBit(GPIOE, GPIO_Pin_7, Bit_RESET);		// Select digit 1
+			GPIO_WriteBit(GPIOE, GPIO_Pin_8 | GPIO_Pin_10 | GPIO_Pin_12 | GPIO_Pin_14, Bit_RESET); // Release other select lines
+			GPIO_WriteBit(GPIOD, GPIO_Pin_9, Bit_RESET);
+			GPIO_WriteBit(GPIOE, GPIO_Pin_7, Bit_SET);		// Select digit 1
 			GPIO_WriteBit(GPIOE, GPIO_Pin_13 , Bit_RESET);	// Reset decimal point
 			
 			if (digits[2]==0)
@@ -116,9 +145,9 @@ void Display(float n){
 		
 		// Set second digit
 		while (TIM_GetCounter(TIM3) < (timerValue+2*setTime)){
-			GPIO_WriteBit(GPIOE, GPIO_Pin_7 | GPIO_Pin_10 | GPIO_Pin_12 | GPIO_Pin_14, Bit_SET); // Release other select lines
-			GPIO_WriteBit(GPIOD, GPIO_Pin_9, Bit_SET);
-			GPIO_WriteBit(GPIOE, GPIO_Pin_8, Bit_RESET);		// Select digit 2
+			GPIO_WriteBit(GPIOE, GPIO_Pin_7 | GPIO_Pin_10 | GPIO_Pin_12 | GPIO_Pin_14, Bit_RESET); // Release other select lines
+			GPIO_WriteBit(GPIOD, GPIO_Pin_9, Bit_RESET);
+			GPIO_WriteBit(GPIOE, GPIO_Pin_8, Bit_SET);		// Select digit 2
 			
 			if (decimal){
 				GPIO_WriteBit(GPIOE, GPIO_Pin_13 , Bit_SET);	// Set decimal point
@@ -149,9 +178,9 @@ void Display(float n){
 		
 		// Set third digit
 		while (TIM_GetCounter(TIM3) < (timerValue+3*setTime)){
-			GPIO_WriteBit(GPIOE, GPIO_Pin_7 | GPIO_Pin_8 | GPIO_Pin_10 | GPIO_Pin_14, Bit_SET); // Release other select lines
-			GPIO_WriteBit(GPIOD, GPIO_Pin_9, Bit_SET);
-			GPIO_WriteBit(GPIOE, GPIO_Pin_12, Bit_RESET);		// Select digit 3
+			GPIO_WriteBit(GPIOE, GPIO_Pin_7 | GPIO_Pin_8 | GPIO_Pin_10 | GPIO_Pin_14, Bit_RESET); // Release other select lines
+			GPIO_WriteBit(GPIOD, GPIO_Pin_9, Bit_RESET);
+			GPIO_WriteBit(GPIOE, GPIO_Pin_12, Bit_SET);		// Select digit 3
 			GPIO_WriteBit(GPIOE, GPIO_Pin_13 , Bit_RESET);	// Reset decimal point
 				
 			if (digits[0]==0)
@@ -178,16 +207,21 @@ void Display(float n){
 		}
 		
 		// Set degree
-		GPIO_WriteBit(GPIOE, GPIO_Pin_7 | GPIO_Pin_8 | GPIO_Pin_10 | GPIO_Pin_12 | GPIO_Pin_14, Bit_SET); // Release other select lines
-		GPIO_WriteBit(GPIOD, GPIO_Pin_9, Bit_RESET);	// Select degree
+		GPIO_WriteBit(GPIOE, GPIO_Pin_7 | GPIO_Pin_8 | GPIO_Pin_10 | GPIO_Pin_12 | GPIO_Pin_14, Bit_RESET); // Release other select lines
+		GPIO_WriteBit(GPIOD, GPIO_Pin_9, Bit_SET);	// Select degree
 		
 		GPIO_WriteBit(GPIOD, GPIO_Pin_10 , Bit_SET);	// Turn on degree LED
-		
+	
 		TIM3_interrupt = 0;
-	}
+		
 
 }
-	
+
+/**
+	*	@brief 7-segment display
+	*	
+	*	- Enable output pins according to digit to display
+	*/	
 void Zero(){
 
 	// Turn on:
@@ -307,11 +341,7 @@ void Nine(){
 }	
 	
 
-/**
-	*	@brief 7-segment display
-	*	
-	*	- Enable output pins
-	*/
+
 	
 void GPIO_config(){
 	// configure I/O for 7-segment display
@@ -354,26 +384,243 @@ void configInit_GPIO(GPIO_TypeDef* GPIOx,
 											 
 }
 
-void Keypad_read(){
+void Keypad_readDigit(){
+	
+	configInit_GPIO(GPIOE, RCC_AHB1Periph_GPIOE,
+										GPIO_Pin_4 | GPIO_Pin_5 | GPIO_Pin_6,
+										GPIO_Mode_OUT, GPIO_Speed_100MHz, GPIO_OType_PP,
+										GPIO_PuPd_DOWN);
+	configInit_GPIO(GPIOC, RCC_AHB1Periph_GPIOC,
+										GPIO_Pin_13,
+										GPIO_Mode_OUT, GPIO_Speed_100MHz, GPIO_OType_PP,
+										GPIO_PuPd_DOWN);
+	// Set the colomns high
+	GPIO_WriteBit(GPIOE, GPIO_Pin_4 | GPIO_Pin_5 | GPIO_Pin_6, Bit_SET);
+	GPIO_WriteBit(GPIOC, GPIO_Pin_13, Bit_SET);	
+	
+	
+	// Read the rows
+	configInit_GPIO(GPIOB, RCC_AHB1Periph_GPIOB,
+										GPIO_Pin_4 | GPIO_Pin_5,
+										GPIO_Mode_IN, GPIO_Speed_100MHz, GPIO_OType_PP,
+										GPIO_PuPd_DOWN);	
+	configInit_GPIO(GPIOD, RCC_AHB1Periph_GPIOD,
+										GPIO_Pin_1 | GPIO_Pin_2,
+										GPIO_Mode_IN, GPIO_Speed_100MHz, GPIO_OType_PP,
+										GPIO_PuPd_DOWN);	
+										
+	if (GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_4)== Bit_RESET && GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_5) == Bit_RESET && GPIO_ReadInputDataBit(GPIOD, GPIO_Pin_1) == Bit_RESET &&	GPIO_ReadInputDataBit(GPIOD, GPIO_Pin_2) == Bit_RESET){
+		// wait for one of the line to be set
+				configInit_GPIO(GPIOD, RCC_AHB1Periph_GPIOC,
+										GPIO_Pin_12,
+										GPIO_Mode_OUT, GPIO_Speed_100MHz, GPIO_OType_PP,
+										GPIO_PuPd_DOWN);
+				GPIO_SetBits(GPIOD, GPIO_Pin_12);
+		result = 99;
+	} 
+	
+	else{
+	
+		// First row
+		if (GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_4) == Bit_SET){
+			// Set this row to output
+			configInit_GPIO(GPIOB, RCC_AHB1Periph_GPIOB,
+											GPIO_Pin_4,
+											GPIO_Mode_OUT, GPIO_Speed_100MHz, GPIO_OType_PP,
+											GPIO_PuPd_DOWN);	
+			// Set this row high
+			GPIO_WriteBit(GPIOB, GPIO_Pin_4, Bit_SET);			
+			
+			// Read the colomns
+			configInit_GPIO(GPIOE, RCC_AHB1Periph_GPIOE,
+											GPIO_Pin_4 | GPIO_Pin_5 | GPIO_Pin_6,
+											GPIO_Mode_IN, GPIO_Speed_100MHz, GPIO_OType_PP,
+											GPIO_PuPd_DOWN);
+			configInit_GPIO(GPIOC, RCC_AHB1Periph_GPIOC,
+											GPIO_Pin_13,
+											GPIO_Mode_IN, GPIO_Speed_100MHz, GPIO_OType_PP,
+											GPIO_PuPd_DOWN);
+			if (GPIO_ReadInputDataBit(GPIOE, GPIO_Pin_6) == Bit_SET){
+				result = 1;
+			}
+			
+			else if (GPIO_ReadInputDataBit(GPIOE, GPIO_Pin_4) == Bit_SET){
+				result = 3;
+			}
+			else if (GPIO_ReadInputDataBit(GPIOE, GPIO_Pin_5) == Bit_SET){
+				result = 10; // A
+			}
+			else if (GPIO_ReadInputDataBit(GPIOC, GPIO_Pin_13) == Bit_SET){
+				result = 2;
+				configInit_GPIO(GPIOD, RCC_AHB1Periph_GPIOC,
+											GPIO_Pin_14,
+											GPIO_Mode_OUT, GPIO_Speed_100MHz, GPIO_OType_PP,
+											GPIO_PuPd_DOWN);
+				GPIO_ToggleBits(GPIOD, GPIO_Pin_14);
+			}
+		
+		} 
+		// Second row
+		else if (GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_5) == Bit_SET){
+			// Set this row to output
+			configInit_GPIO(GPIOB, RCC_AHB1Periph_GPIOB,
+											GPIO_Pin_5,
+											GPIO_Mode_OUT, GPIO_Speed_100MHz, GPIO_OType_PP,
+											GPIO_PuPd_DOWN);	
+			// Set this row high
+			GPIO_WriteBit(GPIOB, GPIO_Pin_5, Bit_SET);			
+			
+			// Read the colomns
+			configInit_GPIO(GPIOE, RCC_AHB1Periph_GPIOE,
+											GPIO_Pin_4 | GPIO_Pin_5 | GPIO_Pin_6,
+											GPIO_Mode_IN, GPIO_Speed_100MHz, GPIO_OType_PP,
+											GPIO_PuPd_DOWN);
+			configInit_GPIO(GPIOC, RCC_AHB1Periph_GPIOC,
+											GPIO_Pin_13,
+											GPIO_Mode_IN, GPIO_Speed_100MHz, GPIO_OType_PP,
+											GPIO_PuPd_DOWN);
+			if (GPIO_ReadInputDataBit(GPIOE, GPIO_Pin_6) == Bit_SET){
+				result = 4;
+			}
+			
+			else if (GPIO_ReadInputDataBit(GPIOE, GPIO_Pin_4) == Bit_SET){
+				result = 6;
+			}
+			else if (GPIO_ReadInputDataBit(GPIOE, GPIO_Pin_5) == Bit_SET){
+				result = 11; // B
+			}
+			else if (GPIO_ReadInputDataBit(GPIOC, GPIO_Pin_13) == Bit_SET){
+				result = 5;
+			}
+			
+		} 
+		
+		// Third row
+		else if (GPIO_ReadInputDataBit(GPIOD, GPIO_Pin_1) == Bit_SET){
+			// Set this row to output
+			configInit_GPIO(GPIOD, RCC_AHB1Periph_GPIOD,
+											GPIO_Pin_1,
+											GPIO_Mode_OUT, GPIO_Speed_100MHz, GPIO_OType_PP,
+											GPIO_PuPd_DOWN);	
+			// Set this row high
+			GPIO_WriteBit(GPIOD, GPIO_Pin_1, Bit_SET);			
+			
+			// Read the colomns
+			configInit_GPIO(GPIOE, RCC_AHB1Periph_GPIOE,
+											GPIO_Pin_4 | GPIO_Pin_5 | GPIO_Pin_6,
+											GPIO_Mode_IN, GPIO_Speed_100MHz, GPIO_OType_PP,
+											GPIO_PuPd_DOWN);
+			configInit_GPIO(GPIOC, RCC_AHB1Periph_GPIOC,
+											GPIO_Pin_13,
+											GPIO_Mode_IN, GPIO_Speed_100MHz, GPIO_OType_PP,
+											GPIO_PuPd_DOWN);
+			if (GPIO_ReadInputDataBit(GPIOE, GPIO_Pin_6) == Bit_SET){
+				result = 7;
+			}
 
+			else if (GPIO_ReadInputDataBit(GPIOE, GPIO_Pin_4) == Bit_SET){
+				result = 9;
+			}
+			else if (GPIO_ReadInputDataBit(GPIOE, GPIO_Pin_5) == Bit_SET){
+				result = 12; // C
+			}
+			else if (GPIO_ReadInputDataBit(GPIOC, GPIO_Pin_13) == Bit_SET){
+				result = 8;
+			}
+		
+		}
+		
+		// Fourth row
+		else{
+			// Set this row to output
+			configInit_GPIO(GPIOD, RCC_AHB1Periph_GPIOD,
+											GPIO_Pin_2,
+											GPIO_Mode_OUT, GPIO_Speed_100MHz, GPIO_OType_PP,
+											GPIO_PuPd_DOWN);	
+			// Set this row high
+			GPIO_WriteBit(GPIOD, GPIO_Pin_2, Bit_SET);			
+			
+			// Read the colomns
+			configInit_GPIO(GPIOE, RCC_AHB1Periph_GPIOE,
+											GPIO_Pin_4 | GPIO_Pin_5 | GPIO_Pin_6,
+											GPIO_Mode_IN, GPIO_Speed_100MHz, GPIO_OType_PP,
+											GPIO_PuPd_DOWN);
+			configInit_GPIO(GPIOC, RCC_AHB1Periph_GPIOC,
+											GPIO_Pin_13,
+											GPIO_Mode_IN, GPIO_Speed_100MHz, GPIO_OType_PP,
+											GPIO_PuPd_DOWN);
+			if (GPIO_ReadInputDataBit(GPIOE, GPIO_Pin_6) == Bit_SET){
+				result = 21;
+			}
+			else if (GPIO_ReadInputDataBit(GPIOE, GPIO_Pin_4) == Bit_SET){
+				result = 22; // ENTER
+			}
+			else if (GPIO_ReadInputDataBit(GPIOE, GPIO_Pin_5) == Bit_SET){
+				result = 13; // D
+			}
+			else if (GPIO_ReadInputDataBit(GPIOC, GPIO_Pin_13) == Bit_SET){
+				result = 0;
+			}
+			
+		}
+	}
+		
 	
 	
 }
 
+void Keypad_read(){
+	userInput = 0;
+	lastResult = 99;
+	count = 0;
+	readDigit = 1;
+	while (result != 22 || result != 21){
+		Keypad_readDigit();
+		if (result != lastResult && result < 10 && count > 5){
+						
+				if (readDigit == 1){
+					userInput = userInput + result*100;
+				} else if (readDigit == 2){
+					userInput = userInput + result*10;
+				} else if (readDigit == 3) {
+					userInput = userInput + result;
+				} else {
+					// ignore after 4 digits...
+				}	
+			count = 0;
+			readDigit++;
+		} 
+		
+		else if (result == 99){
+			count++;
+		}
+		
+		else if (result == 21){
+			userInput=500;
+		}
+				
+		else{
+			
+		}
+		lastResult = result;	
 
+	}
+			// Scale back!
+			if (readDigit == 3){
+				userInput = userInput/100;
+			} else if (readDigit == 4){
+				userInput = userInput/10;
+			} 
+			// done reading from user input
+			configInit_GPIO(GPIOD, RCC_AHB1Periph_GPIOC,
+										GPIO_Pin_13,
+										GPIO_Mode_OUT, GPIO_Speed_100MHz, GPIO_OType_PP,
+										GPIO_PuPd_DOWN);
+			GPIO_WriteBit(GPIOD, GPIO_Pin_13, Bit_SET);
+			displayUserInput = 1;
+//			while (1){
+//				DisplayUserInput(userInput);
+//			}
+			return;
+}
 
-
-
-
-/**
-	*	@brief Initialize user interface using GPIO
-	*	
-	*	- Read user input from keypad	(pins LEFT TO RIGHT)
-	*																PE6(brown)	PC13(red)	PE4(orange)		PE5(yellow)	PB4(green)		PB5(blue)		PD1(purple)	PD2(black)
-	*	- Translate numbers to be displayed into control signals
-	*	- Send signals out through 7-segment display (pins from LEFT TO RIGHT)
-	*																PB11(black)	PB12(purple)	PB13(blue)	PB14(green)	PB15(yellow)	PD8(orange)		PD9(red)	PD10(brown)
-	*																PE7(black)	PE8(purple)		PE9(blue)		PE10(green)	PE11(yellow)	PE12(orange)	PE13(red)	PE14(brown)															
-	*
-	*	Must add the pin layout~
-	*/
