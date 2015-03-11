@@ -6,8 +6,8 @@
 #include "kalman.h"
 #include "UI.h"
 #include "stm32f4xx_tim.h"
-float n=123;
-int temp;
+float n=000;
+
 int main(){
 
 /**
@@ -50,44 +50,57 @@ int main(){
 	kalman_state kstate_Y = {1,1,0,0,0};
 	kalman_state kstate_Z = {1,1,0,0,0};
 
-
+	
 /**
-	*	@brief User interface
+	*	@brief Configure GPIO
 	*	
-	*	- Read user input from keypad	(pins right to left)
-	*																PE6(black)	PC13(purple)	PE4(blue)		PE5(green)	PB4(yellow)		PB5(orange)		PD1(red)	PD2(brown)
-	*	- Translate numbers to be displayed into control signals
-	*	- Send signals out through 7-segment display (pins from right to left)
-	*																PB11(black)	PB12(purple)	PB13(blue)	PB14(green)	PB15(yellow)	PD8(orange)		PD9(red)	PD10(brown)
-	*																PE7(black)	PE8(purple)		PE9(blue)		PE10(green)	PE11(yellow)	PE12(orange)	PE13(red)	PE14(brown)															
-	*/
-	
-	
+	*	- GPIO for 7-segment display
+	* - GPIO for on board LED
+	*/		
 	GPIO_config();	
 	
+/**
+	*	@brief Configure hardware timer
+	*	
+	*	- Use hardware timer TIM3
+	*	-	Define timer parameters
+	*	-	Enable hardware interrupt 
+	*
+	*/	
 	Timer_config(	3000,								// prescaler
 								TIM_CounterMode_Up,
 								500, 									// period
 								TIM_CKD_DIV1, 
 								0); 
-
+	numDisplay =n;
+	EnableTimerInterrupt();
 	
 	
 	EXTI_GenerateSWInterrupt(EXTI_Line0); // generate an interrupt to initialize the process
 	
 
-	numDisplay =n;
-	EnableTimerInterrupt();
+	
+	//Collect alpha
+	GPIO_WriteBit(GPIOD, GPIO_Pin_13 | GPIO_Pin_15, Bit_SET);
 	Keypad_read();
-	// must reset user input
+	// store user input in variable and reset user input
+	//
 	// userInput = 0;
+	GPIO_WriteBit(GPIOD, GPIO_Pin_13 | GPIO_Pin_15, Bit_SET);	
+	
+	
+	// Collect beta
+	GPIO_WriteBit(GPIOD, GPIO_Pin_12 | GPIO_Pin_14, Bit_SET);
+	Keypad_read();
+	// store user input in variable and reset user input
+	// 
+	// userInput = 0;
+	GPIO_WriteBit(GPIOD, GPIO_Pin_12 | GPIO_Pin_14, Bit_RESET);
 	
 
 	
-	
 	while(1){
-	
-				
+
 			if (getITStatus()) {
 				setITStatus(0);
 
@@ -110,8 +123,6 @@ int main(){
 				//float tilt = getTilt(ALPHA, f_xyz);
 
 			}
-
-			
 
 	}
 	return 0;
