@@ -18,10 +18,11 @@ void Accel_InitConfig(uint8_t Power,
 	
 	/* Required delay for the MEMS Accelerometre: Turn-on time = 3/Output data Rate 
                                                              = 3/100 = 30ms */
+												/*
 	int i = 0;
   while(i<30) {
 		i++;
-	}
+	}*/
 	
 	uint8_t ctrl = 0x04;
 	LIS302DL_Write(&ctrl, LIS302DL_CTRL_REG3_ADDR, 1);
@@ -81,20 +82,19 @@ void calibrateSensor() {
 	int j = 1;
 	int i = 0;
 	for (; j <= 6; j++) {
-		// pause for user to adjust position
-		int k = 0;
+		// TODO: pause for user to adjust position
 		printf("adjust position\n");
 		
 		for (; i < j * NUM_CALIBRATION_SAMPLES; i++) {
-			uint8_t data[3];
-			getXYZData(data);
+			int32_t data[3];
+			LIS302DL_ReadACC(data);
 		
-			int j = 0;
-			for (; j < 3; j++) {
-				w_data[i] = (float)data[j];
+			int k = 0;
+			for (; k < 3; k++) {
+				w_data[i] = (float)data[k];
 				i++;
 			}
-			w_data[j] = 1;
+			w_data[i] = 1;
 		}
 	}
 #endif
@@ -110,16 +110,16 @@ void calibrateSensor() {
 	arm_mat_trans_f32(&w, &w_T);
 
 	// wT * w
-	arm_matrix_instance_f32 temp;
-	float temp_data[16]; // 4 * 4 square matrix from w times its transpose
-	arm_mat_init_f32(&temp, 4, 4, temp_data);
-	arm_mat_mult_f32(&w_T, &w, &temp);	
+	arm_matrix_instance_f32 multTrans;
+	float multTrans_data[16]; // 4 * 4 square matrix from w times its transpose
+	arm_mat_init_f32(&multTrans, 4, 4, multTrans_data);
+	arm_mat_mult_f32(&w_T, &w, &multTrans);	
 
 	// [wT * w] inverse
 	arm_matrix_instance_f32 inverse;
 	float inverse_data[16]; // inverse keeps same dimensions
 	arm_mat_init_f32(&inverse, 4, 4, inverse_data);
-	arm_mat_inverse_f32(&temp, &inverse);
+	arm_mat_inverse_f32(&multTrans, &inverse);
 
 	// [wT * w] inverse * wT
 	arm_matrix_instance_f32 multInverse;
@@ -141,32 +141,17 @@ void calibrateSensor() {
 	}
 }
 
-void getXYZData(uint8_t* data) {
-	LIS302DL_Read(&data[0], LIS302DL_OUT_X_ADDR, 1);
-	LIS302DL_Read(&data[1], LIS302DL_OUT_Y_ADDR, 1);
-	LIS302DL_Read(&data[2], LIS302DL_OUT_Z_ADDR, 1);
-}
-
-void normalize(uint8_t* data, float* output) {
+void normalize(int32_t* data, float* output) {
 	float w_data[] = {data[0], data[1], data[2], 1.0};
 	arm_matrix_instance_f32 w;
-	w.numCols = 4;
-	w.numRows = 1;
-	w.pData = w_data;
+	arm_mat_init_f32(&w, 1, 4, w_data);
 	
 	arm_matrix_instance_f32 result;
+	arm_mat_init_f32(&result, 1, 3, output);
 	arm_mat_mult_f32(&w, &calParams, &result);
-	
-	output = result.pData;
 }
 
 float getTilt(uint8_t type, float xyz[]) {
-	int i = 0;
-	for (; i < 3; i++) {
-		float temp = calcAcceleration(xyz[i]);
-		printf("accel: %f\n", temp);
-	}
-	
 	float top;
 	float bot;
 	if (type == ALPHA) {
@@ -180,24 +165,4 @@ float getTilt(uint8_t type, float xyz[]) {
 	}
 	
 	return (atan(top / (sqrt(bot * bot + xyz[2] * xyz[2]))));
-}
-
-float calcAcceleration(float input) {
-	uint8_t crtl;
-	LIS302DL_Read(&crtl, LIS302DL_CTRL_REG1_ADDR, 1);
-	// taken from ReadACC of lis302dl.c
-	switch(crtl & 0x20) 
-    {
-    /* FS bit = 0 ==> Sensitivity typical value = 18milligals/digit*/ 
-    case 0x00:
-        return (int32_t)(LIS302DL_SENSITIVITY_2_3G *  (int8_t)input);
-      break;
-    /* FS bit = 1 ==> Sensitivity typical value = 72milligals/digit*/ 
-    case 0x20:
-        return (int32_t)(LIS302DL_SENSITIVITY_9_2G * (int8_t)input);        
-      break;
-    default:
-      break;
-    }
-		return 0;
 }

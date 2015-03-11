@@ -31,12 +31,7 @@ void Accel_InitConfig(uint8_t Power,
 	*/
 void calibrateSensor(void);
 
-/**
-
-	*/
-void getXYZData(uint8_t* data);
-
-void normalize(uint8_t* data, float* result);
+void normalize(int32_t* data, float* result);
 
 /**
 	@brief Get the tilt of the board
@@ -45,4 +40,3 @@ void normalize(uint8_t* data, float* result);
 	@retval Return the tilt angle
 	*/
 float getTilt(uint8_t type, float xyz[]);
-float calcAcceleration(float input);

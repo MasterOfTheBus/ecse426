@@ -79,26 +79,28 @@ int main(){
 			if (getITStatus()) {
 				setITStatus(0);
 
-				uint8_t xyz[3];
-				float xyz_fl[3];
-				getXYZData(xyz);
+				int32_t xyz[3]; // get the acc data
+				LIS302DL_ReadACC(xyz);
 				printf("%i, %i, %i\n", xyz[0], xyz[1], xyz[2]);
+				
+				float xyz_float[3];
 
+				normalize(xyz, xyz_float); // normalize the data
+				printf("%f, %f, %f\n", xyz_float[0], xyz_float[1], xyz_float[2]);
+				
 				float f_xyz[3];
 
-				Kalmanfilter_C(xyz_fl[0], &f_xyz[0], &kstate_X); // X
-				Kalmanfilter_C(xyz_fl[1], &f_xyz[1], &kstate_Y); // Y
-				Kalmanfilter_C(xyz_fl[2], &f_xyz[2], &kstate_Z); // Z
-				
-				normalize(xyz, xyz_fl);
-				printf("%f, %f, %f\n", xyz_fl[0], xyz_fl[1], xyz_fl[2]);
+				// filter the data
+				Kalmanfilter_C(xyz_float[0], &f_xyz[0], &kstate_X); // X
+				Kalmanfilter_C(xyz_float[1], &f_xyz[1], &kstate_Y); // Y
+				Kalmanfilter_C(xyz_float[2], &f_xyz[2], &kstate_Z); // Z
 
 				//float tilt = getTilt(ALPHA, f_xyz);
 
 			}
 
 			
-		Display(n);
+		//Display(n);
 	
 	}
 	return 0;
