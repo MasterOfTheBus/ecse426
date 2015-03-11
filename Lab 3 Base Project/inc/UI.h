@@ -10,8 +10,10 @@
 	@params Clock division
 	@params Repetition counter
 	*/
-static float numDisplay;
+extern float numDisplay;
 static int TIM3_interrupt;
+extern int userInput;
+
 
 void Timer_config(uint16_t Prescaler,
 									uint16_t CounterMode,
@@ -23,7 +25,8 @@ void EnableTimerInterrupt(void);
 
 void TIM3_IRQHandler(void);
 
-void Display(float n);
+void Display(float n, int input);
+
 
 void Zero(void);
 void One(void);
@@ -35,6 +38,8 @@ void Six(void);
 void Seven(void);
 void Eight(void);
 void Nine(void);
+void Keypad_readDigit(void);
+void Keypad_read(void);
 
 /**
   * @brief Configure a GPIO port and Initialize it.

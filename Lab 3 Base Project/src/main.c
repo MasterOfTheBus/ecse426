@@ -6,7 +6,8 @@
 #include "kalman.h"
 #include "UI.h"
 #include "stm32f4xx_tim.h"
-float n=678;
+float n=123;
+int temp;
 int main(){
 
 /**
@@ -69,13 +70,24 @@ int main(){
 								500, 									// period
 								TIM_CKD_DIV1, 
 								0); 
-	EnableTimerInterrupt();
+
 	
 	
 	EXTI_GenerateSWInterrupt(EXTI_Line0); // generate an interrupt to initialize the process
 	
 
+	numDisplay =n;
+	EnableTimerInterrupt();
+	Keypad_read();
+	// must reset user input
+	//userInput = 0;
+	
+
+	
+	
 	while(1){
+	
+				
 			if (getITStatus()) {
 				setITStatus(0);
 
@@ -94,7 +106,6 @@ int main(){
 			}
 
 			
-		Display(n);
 	
 	}
 	return 0;
