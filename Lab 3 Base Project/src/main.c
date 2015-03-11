@@ -45,9 +45,9 @@ int main(){
 	*														p =
 	*/		
 
-	kalman_state kstate_X = {1,1,0,0,0};
-	kalman_state kstate_Y = {1,1,0,0,0};
-	kalman_state kstate_Z = {1,1,0,0,0};
+	kalman_state kstate_X = {0.025, 5, 0, 0, 0};
+	kalman_state kstate_Y = {0.025, 5, 0, 0, 0};
+	kalman_state kstate_Z = {0.025, 5, 0, 0, 0};
 
 
 /**
@@ -81,7 +81,7 @@ int main(){
 
 				int32_t xyz[3]; // get the acc data
 				LIS302DL_ReadACC(xyz);
-				printf("%i, %i, %i\n", xyz[0], xyz[1], xyz[2]);
+				//printf("%i, %i, %i\n", xyz[0], xyz[1], xyz[2]);
 				
 				float xyz_float[3];
 
@@ -95,7 +95,9 @@ int main(){
 				Kalmanfilter_C(xyz_float[1], &f_xyz[1], &kstate_Y); // Y
 				Kalmanfilter_C(xyz_float[2], &f_xyz[2], &kstate_Z); // Z
 
-				//float tilt = getTilt(ALPHA, f_xyz);
+				float tilt = getTilt(ALPHA, f_xyz);
+				
+				printf("tilt: %f\n", tilt);
 
 			}
 
