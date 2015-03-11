@@ -1,8 +1,15 @@
 #include "stm32f4xx_conf.h"
 #include "lis302dl.h"
+#include "arm_math.h"
+
 
 #define ALPHA (uint8_t)0
 #define BETA (uint8_t)1
+#define NUM_CALIBRATION_SAMPLES 1
+
+// calibration parameters
+static float cal_data[12];
+static arm_matrix_instance_f32 calParams;
 
 /**
 	@brief Initialize the mems struct
@@ -22,7 +29,10 @@ void Accel_InitConfig(uint8_t Power,
 /**
 
 	*/
-void getXYZData(uint8_t data[]);
+void calibrateSensor(void);
+
+void normalize(int32_t* data, float* result);
+
 /**
 	@brief Get the tilt of the board
 
@@ -30,4 +40,3 @@ void getXYZData(uint8_t data[]);
 	@retval Return the tilt angle
 	*/
 float getTilt(uint8_t type, float xyz[]);
-float calcAcceleration(float input);
