@@ -1,6 +1,5 @@
 #include "interrupt.h"
 #include "lis302dl.h"
-#include <stdio.h>
 
 void setITStatus(int set) {
 	accel_interrupt = set;
@@ -36,8 +35,8 @@ void InitInterrupt() {
 	
 	NVIC_InitTypeDef nvic_init;
 	nvic_init.NVIC_IRQChannel = EXTI0_IRQn; // exti line 0
-	nvic_init.NVIC_IRQChannelPreemptionPriority = 0x01; // highest priority
-	nvic_init.NVIC_IRQChannelSubPriority = 0x01; // highest priority
+	nvic_init.NVIC_IRQChannelPreemptionPriority = 0x01; // low priority
+	nvic_init.NVIC_IRQChannelSubPriority = 0x01; // low priority
 	nvic_init.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&nvic_init);	
 }

@@ -33,7 +33,9 @@ int main(){
 	*	
 	*	- Use reset button to allow user to calibrate sensor
 	*/
+#if calibrate
 	calibrateSensor();
+#endif
 	
 /**
 	*	@brief Data Filtering
@@ -73,31 +75,26 @@ int main(){
 								TIM_CKD_DIV1, 
 								0); 
 	numDisplay =n;
-	EnableTimerInterrupt();
+	//EnableTimerInterrupt();
 	
 	
-	EXTI_GenerateSWInterrupt(EXTI_Line0); // generate an interrupt to initialize the process
-	
-
+	EXTI_GenerateSWInterrupt(EXTI_Line0); // generate an interrupt to initialize the samplingprocess
 	
 	//Collect alpha
 	GPIO_WriteBit(GPIOD, GPIO_Pin_13 | GPIO_Pin_15, Bit_SET);
 	Keypad_read();
 	// store user input in variable and reset user input
-	//
-	// userInput = 0;
+	
+	// userInput = 500;
 	GPIO_WriteBit(GPIOD, GPIO_Pin_13 | GPIO_Pin_15, Bit_SET);	
-	
-	
+
 	// Collect beta
 	GPIO_WriteBit(GPIOD, GPIO_Pin_12 | GPIO_Pin_14, Bit_SET);
 	Keypad_read();
 	// store user input in variable and reset user input
 	// 
-	// userInput = 0;
+	// userInput = 500;
 	GPIO_WriteBit(GPIOD, GPIO_Pin_12 | GPIO_Pin_14, Bit_RESET);
-	
-
 	
 	while(1){
 
@@ -126,6 +123,11 @@ int main(){
 
 			}
 
+			if (TIM3_interrupt) {
+				TIM3_interrupt = 0;
+				Display(numDisplay, 500);
+			}
+			
 	}
 	return 0;
 }

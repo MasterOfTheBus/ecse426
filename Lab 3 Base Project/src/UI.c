@@ -54,6 +54,8 @@ void EnableTimerInterrupt(){
 void TIM3_IRQHandler(){
 	if (TIM_GetITStatus(TIM3, TIM_IT_Update) != RESET){
 		Display(numDisplay,userInput);
+		
+		//TIM3_interrupt = 1;
 		TIM_ClearITPendingBit(TIM3, TIM_IT_Update);
 	}
 }
@@ -112,7 +114,7 @@ void GPIO_config(){
 
 void Display(float n, int input){
 	
-	if (input !=0 ){
+	if (input !=500 ){
 	 m = input;
 		decimal = 0;
 	}
@@ -581,6 +583,7 @@ void Keypad_read(){
 		}
 		lastResult = result;	
 
+		//Display(result, 500);
 	}
 			// Scale back!
 			if (readDigit == 3){

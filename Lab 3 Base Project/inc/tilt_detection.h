@@ -2,12 +2,22 @@
 #include "lis302dl.h"
 #include "arm_math.h"
 
+#define calibrate 0
+
 #define ALPHA (uint8_t)0
 #define BETA (uint8_t)1
-#define NUM_CALIBRATION_SAMPLES 1
 
 // calibration parameters
+#if calibrate
 static float cal_data[12];
+#else	
+// calibration completed
+// values from matlab
+static float cal_data[] = {-0.001000548970869, 0.000009174814798, -0.000017855471758,
+													 -0.000009008599985, -0.001000996022111, 0.000008455943239,
+													 0.000000436148874, -0.000008625098424, 0.000956949776224,
+													 -0.512170657749237, 0.485857723616614, -0.418036663694971};
+#endif
 static arm_matrix_instance_f32 calParams;
 
 /**
