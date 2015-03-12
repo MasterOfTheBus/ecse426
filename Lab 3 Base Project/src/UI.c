@@ -568,5 +568,9 @@ void correctionOutput(int8_t upDown, uint8_t angleType) {
 		return;
 	}
 	
-	
+	if (upDown == 1) {
+		
+	} else if (upDown == -1) {
+		
+	}
 }

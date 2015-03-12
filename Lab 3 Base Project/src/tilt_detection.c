@@ -19,7 +19,7 @@ void Accel_InitConfig(uint8_t Power,
 	accel_init.Self_Test = SelfTest;
 	LIS302DL_Init(&accel_init);
 	
-	uint8_t ctrl = 0x04;
+	uint8_t ctrl = 0x04; // Set the value of control register 3 in order to setup interrupts on a data ready signal
 	LIS302DL_Write(&ctrl, LIS302DL_CTRL_REG3_ADDR, 1);
 												
 #if !calibrate
@@ -28,6 +28,9 @@ void Accel_InitConfig(uint8_t Power,
 }
 
 #if calibrate
+/*
+	Calculate the parameter values for the calibration. Uses the least square method.
+ */
 void calculateParameters(arm_matrix_instance_f32 w, arm_matrix_instance_f32 Y) {
 	//-----------least square method to obtain 12 parameters
 	// wT
@@ -100,19 +103,19 @@ void calibrateSensor() {
 #endif
 
 void normalize(int32_t* data, float* output) {
-	float w_data[] = {data[0], data[1], data[2], 1.0};
+	float w_data[] = {data[0], data[1], data[2], 1.0}; // create the raw data vector [x, y, z, 1]
 	arm_matrix_instance_f32 w;
 	arm_mat_init_f32(&w, 1, 4, w_data);
 	
 	arm_matrix_instance_f32 result;
 	arm_mat_init_f32(&result, 1, 3, output);
-	arm_mat_mult_f32(&w, &calParams, &result);
+	arm_mat_mult_f32(&w, &calParams, &result); // multiply raw data by the normalization matrix
 }
 
 float getTilt(uint8_t type, float xyz[]) {
 	float top;
 	float bot;
-	if (type == ALPHA) { // pitch
+	if (type == ALPHA || type == 2) { // pitch
 		top = xyz[0];
 		bot = xyz[1];
 	} else if (type == BETA) { // roll
@@ -122,6 +125,7 @@ float getTilt(uint8_t type, float xyz[]) {
 		return (-1);
 	}
 	
+	// calculate the degrees based on the formula
 	float degrees = (atan(top / (sqrt(bot * bot + xyz[2] * xyz[2]))) * 180 / PI);
 	
 	// adjust degrees for quadrant
@@ -138,7 +142,7 @@ float getTilt(uint8_t type, float xyz[]) {
 
 int8_t tiltCorrection(float tilt, float inputTilt, uint8_t* currentTiltType) {
 	if (inputTilt - tilt <= 5 && inputTilt - tilt >= -5) {
-		// indicate a new angle to correct for
+		// indicate which angle to correct for
 		if (*currentTiltType == ALPHA) {
 			*currentTiltType = BETA;
 		} else {
@@ -146,6 +150,12 @@ int8_t tiltCorrection(float tilt, float inputTilt, uint8_t* currentTiltType) {
 		}
 		return 0;
 	} else {
+		/*
+			If the difference between the angles is less than 180 degrees, rotate up (1)
+			Else rotate down (-1)
+		
+			Check which tilt angle is larger first
+		*/
 		if (inputTilt > tilt) {
 			return ((inputTilt - tilt <= 180) ? 1 : -1);
 		} else {

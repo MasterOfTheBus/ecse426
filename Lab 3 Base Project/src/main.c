@@ -12,6 +12,8 @@ int main(){
 	
 	float tilt;
 	uint8_t angleType = ALPHA;
+	uint8_t upDown = 0;
+	angleDisplay = 1;
 
 /**
 	*	@brief Tilt detection using STM32F407VG (Accelerometer version M8997B)
@@ -44,11 +46,11 @@ int main(){
 	*	@brief Data Filtering
 	*	
 	*	- Use Kalman filter to process data
-	* - Kalman state variables: q = 
-	*														r = 
-	*														x =
-	*														k =
-	*														p =
+	* - Kalman state variables: q = 0.025
+	*														r = 5
+	*														x = 0
+	*														k = 0
+	*														p = 0
 	*/		
 
 	kalman_state kstate_X = {0.025, 5, 0, 0, 0};
@@ -78,27 +80,27 @@ int main(){
 								TIM_CKD_DIV1, 
 								0); 
 	numDisplay =n;
-	//EnableTimerInterrupt();
+	EnableTimerInterrupt();
 	
 	
-	EXTI_GenerateSWInterrupt(EXTI_Line0); // generate an interrupt to initialize the samplingprocess
+	EXTI_GenerateSWInterrupt(EXTI_Line0); // generate an interrupt to initialize the sampling process
 	
 	//Collect alpha
 	GPIO_WriteBit(GPIOD, GPIO_Pin_13 | GPIO_Pin_15, Bit_SET);
 	Keypad_read();
 	// store user input in variable and reset user input
-	int alphaTilt = userInput;
-	// userInput = 500;
+	int alphaTilt = 60;//userInput;
+	userInput = 500;
 	GPIO_WriteBit(GPIOD, GPIO_Pin_13 | GPIO_Pin_15, Bit_SET);	
 
 	// Collect beta
 	GPIO_WriteBit(GPIOD, GPIO_Pin_12 | GPIO_Pin_14, Bit_SET);
 	Keypad_read();
 	// store user input in variable and reset user input
-	int betaTilt = userInput;
-	// userInput = 500;
+	int betaTilt = 290;//userInput;
+	userInput = 500;
 	GPIO_WriteBit(GPIOD, GPIO_Pin_12 | GPIO_Pin_14, Bit_RESET);
-	
+
 	while(1){
 
 			if (getITStatus()) {
@@ -120,7 +122,7 @@ int main(){
 				Kalmanfilter_C(xyz_float[1], &f_xyz[1], &kstate_Y); // Y
 				Kalmanfilter_C(xyz_float[2], &f_xyz[2], &kstate_Z); // Z
 
-				tilt = getTilt(ALPHA, f_xyz);
+				tilt = getTilt(angleType, f_xyz);
 				
 				printf("tilt: %f\n", tilt);
 
@@ -129,14 +131,21 @@ int main(){
 			if (angleType != 2) {
 				float inputTilt = ((angleType == ALPHA) ? alphaTilt : betaTilt);
 				// upDown, 1 for up, -1 for down, 0 for done
-				uint8_t upDown = tiltCorrection(tilt, inputTilt, &angleType);
-				
-				correctionOutput(upDown, angleType);
+				upDown = tiltCorrection(tilt, inputTilt, &angleType);
+				printf("updown: %i\n", upDown);
+				angleDisplay = 0;
+			} else {
+				angleDisplay = 1;
 			}
 /*
 			if (TIM3_interrupt) {
 				TIM3_interrupt = 0;
-				Display(numDisplay, 500);
+			
+				if (angleDisplay) {
+					Display(numDisplay, 500);
+				} else {
+					correctionOutput(upDown, angleType);
+				}
 			}
 */			
 	}

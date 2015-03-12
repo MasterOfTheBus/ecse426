@@ -17,7 +17,7 @@ void InitInterrupt() {
 	
 	/* Configure GPIO PINs to detect Interrupts */
 	GPIO_InitTypeDef GPIO_InitStructure;
-  GPIO_InitStructure.GPIO_Pin = LIS302DL_SPI_INT1_PIN;
+  GPIO_InitStructure.GPIO_Pin = LIS302DL_SPI_INT1_PIN; // The pin to read interrupt data from
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN; // input from GPIO
   GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz; // match sample rate
@@ -34,7 +34,7 @@ void InitInterrupt() {
 	EXTI_Init(&exti_init);
 	
 	NVIC_InitTypeDef nvic_init;
-	nvic_init.NVIC_IRQChannel = EXTI0_IRQn; // exti line 0
+	nvic_init.NVIC_IRQChannel = EXTI0_IRQn; // exti line 0 matching exti
 	nvic_init.NVIC_IRQChannelPreemptionPriority = 0x01; // low priority
 	nvic_init.NVIC_IRQChannelSubPriority = 0x01; // low priority
 	nvic_init.NVIC_IRQChannelCmd = ENABLE;

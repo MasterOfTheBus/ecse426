@@ -13,6 +13,7 @@
 extern float numDisplay;
 static int TIM3_interrupt;
 extern int userInput;
+static int angleDisplay;
 
 /**
 	*	@brief Hardware Timer
@@ -139,4 +140,12 @@ void configInit_GPIO(GPIO_TypeDef* GPIOx,
 										 GPIOOType_TypeDef oType,
 										 GPIOPuPd_TypeDef puPd);
 
+/**
+	@brief Display the animation to indicate the direction to tilt board to match desired tilt angle
+
+	If angleType is @ref ALPHA then the direction is up/down. If angleType is @ref BETA then the direction is right/left.
+
+	@param upDown The direction to tilt the board. Value of 1 indicates up/right, value of -1 indicates down/left, value of 0 indicates matching.
+	@param angleType The type of angle for which to correct. Will have values of @ref ALPHA @ref BETA or 2 to indicate that correction is unneeded.
+	*/
 void correctionOutput(int8_t upDown, uint8_t angleType);
