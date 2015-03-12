@@ -139,4 +139,4 @@ void configInit_GPIO(GPIO_TypeDef* GPIOx,
 										 GPIOOType_TypeDef oType,
 										 GPIOPuPd_TypeDef puPd);
 
-
+void correctionOutput(int8_t upDown, uint8_t angleType);

@@ -49,3 +49,5 @@ void normalize(int32_t* data, float* result);
 	@retval Return the tilt angle
 	*/
 float getTilt(uint8_t type, float xyz[]);
+
+int8_t tiltCorrection(float tilt, float inputTilt, uint8_t* currentTiltType);

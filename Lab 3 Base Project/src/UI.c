@@ -110,7 +110,28 @@ void GPIO_config(){
 
 }
 
-
+void displayDigit(int digit) {
+			if (digits[digit]==0)
+				Zero();
+			else if (digits[digit]==1)
+				One();
+			else if (digits[digit]==2)
+				Two();
+			else if (digits[digit]==3)
+				Three();
+			else if (digits[digit]==4)
+				Four();
+			else if (digits[digit]==5)
+				Five();
+			else if (digits[digit]==6)
+				Six();
+			else if (digits[digit]==7)
+				Seven();
+			else if (digits[digit]==8)
+				Eight();
+			else
+				Nine();
+}
 
 void Display(float n, int input){
 	
@@ -148,26 +169,7 @@ void Display(float n, int input){
 			GPIO_WriteBit(GPIOE, GPIO_Pin_7, Bit_SET);		// Select digit 1
 			GPIO_WriteBit(GPIOE, GPIO_Pin_13 , Bit_RESET);	// Reset decimal point
 			
-			if (digits[2]==0)
-				Zero();
-			else if (digits[2]==1)
-				One();
-			else if (digits[2]==2)
-				Two();
-			else if (digits[2]==3)
-				Three();
-			else if (digits[2]==4)
-				Four();
-			else if (digits[2]==5)
-				Five();
-			else if (digits[2]==6)
-				Six();
-			else if (digits[2]==7)
-				Seven();
-			else if (digits[2]==8)
-				Eight();
-			else
-				Nine();
+			displayDigit(2);
 		}
 		
 		
@@ -180,28 +182,8 @@ void Display(float n, int input){
 			if (decimal){
 				GPIO_WriteBit(GPIOE, GPIO_Pin_13 , Bit_SET);	// Set decimal point
 			}
-			
-			if (digits[1]==0)
-				Zero();
-			else if (digits[1]==1)
-				One();
-			else if (digits[1]==2)
-				Two();
-			else if (digits[1]==3)
-				Three();
-			else if (digits[1]==4)
-				Four();
-			else if (digits[1]==5)
-				Five();
-			else if (digits[1]==6)
-				Six();
-			else if (digits[1]==7)
-				Seven();
-			else if (digits[1]==8)
-				Eight();
-			else
-				Nine();
-			
+
+			displayDigit(1);
 		}
 		
 		// Set third digit
@@ -210,28 +192,8 @@ void Display(float n, int input){
 			GPIO_WriteBit(GPIOD, GPIO_Pin_9, Bit_RESET);
 			GPIO_WriteBit(GPIOE, GPIO_Pin_12, Bit_SET);		// Select digit 3
 			GPIO_WriteBit(GPIOE, GPIO_Pin_13 , Bit_RESET);	// Reset decimal point
-				
-			if (digits[0]==0)
-				Zero();
-			else if (digits[0]==1)
-				One();
-			else if (digits[0]==2)
-				Two();
-			else if (digits[0]==3)
-				Three();
-			else if (digits[0]==4)
-				Four();
-			else if (digits[0]==5)
-				Five();
-			else if (digits[0]==6)
-				Six();
-			else if (digits[0]==7)
-				Seven();
-			else if (digits[0]==8)
-				Eight();
-			else
-				Nine();
-			
+	
+			displayDigit(0);
 		}
 		
 		// Set degree
@@ -601,3 +563,10 @@ void Keypad_read(){
 			return;
 }
 
+void correctionOutput(int8_t upDown, uint8_t angleType) {
+	if (angleType == 2) {
+		return;
+	}
+	
+	
+}
