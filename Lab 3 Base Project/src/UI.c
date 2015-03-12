@@ -18,6 +18,8 @@ int userInput;
 int count;
 int lastResult;
 
+int correctionCount;
+static int angleDisplay;
 
 void Timer_config(uint16_t Prescaler,
 									uint16_t CounterMode,
@@ -38,6 +40,8 @@ void Timer_config(uint16_t Prescaler,
 	TIM_TimeBaseInit(TIM3, &timer_init);
 	TIM_Cmd(TIM3, ENABLE);
 	TIM_ITConfig(TIM3, TIM_IT_Update, ENABLE); // enable interrupt
+										
+	angleDisplay = 1;
 }
 
 	
@@ -53,9 +57,13 @@ void EnableTimerInterrupt(){
 
 void TIM3_IRQHandler(){
 	if (TIM_GetITStatus(TIM3, TIM_IT_Update) != RESET){
-		Display(numDisplay,userInput);
+		/*if (angleDisplay) {
+			Display(numDisplay,userInput);
+		} else {
+			//correctionOutput(); // will not work, need the up down
+		}*/
 		
-		//TIM3_interrupt = 1;
+		TIM3_interrupt = 1;
 		TIM_ClearITPendingBit(TIM3, TIM_IT_Update);
 	}
 }
@@ -156,7 +164,7 @@ void Display(float n, int input){
 			digits[i] = (int)(m%10);
 			m = (m-(m%10))/10;
 		}
-		printf ("%i %i %i",digits[2], digits[1], digits[0]);
+		//printf ("%i %i %i",digits[2], digits[1], digits[0]);
 
 		// Get hardware timer value
 		timerValue = TIM_GetCounter(TIM3);
@@ -511,6 +519,9 @@ void Keypad_readDigit(){
 
 
 void Keypad_read(){
+	while (result == 22) {
+		Keypad_readDigit();
+	}
 	userInput = 0;
 	lastResult = 99;
 	count = 0;
@@ -540,12 +551,11 @@ void Keypad_read(){
 			userInput=500;
 		}
 				
-		else{
-			
+		else if (result == 22 ){
+			break;
 		}
 		lastResult = result;	
 
-		//Display(result, 500);
 	}
 			// Scale back!
 			if (readDigit == 3){
@@ -563,14 +573,45 @@ void Keypad_read(){
 			return;
 }
 
-void correctionOutput(int8_t upDown, uint8_t angleType) {
-	if (angleType == 2) {
-		return;
+void correctionOutput(int8_t upDown) {
+	// display
+	GPIO_WriteBit(GPIOE, GPIO_Pin_8 | GPIO_Pin_10 | GPIO_Pin_12 | GPIO_Pin_14, Bit_RESET); // Release other select lines
+	GPIO_WriteBit(GPIOD, GPIO_Pin_9, Bit_RESET);
+	GPIO_WriteBit(GPIOE, GPIO_Pin_7, Bit_SET);		// Select digit 1
+	GPIO_WriteBit(GPIOE, GPIO_Pin_13 , Bit_RESET);	// Reset decimal point
+	switch (correctionCount) {
+		case 0: // bottom line
+			GPIO_WriteBit(GPIOE, GPIO_Pin_9, Bit_SET);
+			GPIO_WriteBit(GPIOB, GPIO_Pin_11 | GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15, Bit_RESET);
+			GPIO_WriteBit(GPIOD, GPIO_Pin_8 | GPIO_Pin_10, Bit_RESET);
+			GPIO_WriteBit(GPIOE, GPIO_Pin_11, Bit_RESET);
+			break;
+		case 1: // middle line
+			GPIO_WriteBit(GPIOB, GPIO_Pin_12, Bit_SET);
+			GPIO_WriteBit(GPIOB, GPIO_Pin_11 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15, Bit_RESET);
+			GPIO_WriteBit(GPIOD, GPIO_Pin_8 | GPIO_Pin_10, Bit_RESET);
+			GPIO_WriteBit(GPIOE, GPIO_Pin_9 | GPIO_Pin_11, Bit_RESET);
+		break;
+		case 2: // top line
+			GPIO_WriteBit(GPIOB, GPIO_Pin_13, Bit_SET);
+			GPIO_WriteBit(GPIOB, GPIO_Pin_11 | GPIO_Pin_12 | GPIO_Pin_14 | GPIO_Pin_15, Bit_RESET);
+			GPIO_WriteBit(GPIOD, GPIO_Pin_8 | GPIO_Pin_10, Bit_RESET);
+			GPIO_WriteBit(GPIOE, GPIO_Pin_9 | GPIO_Pin_11, Bit_RESET);
+			break;
+		default:
+			break;
 	}
-	
+
+	// adjust for next value
 	if (upDown == 1) {
-		
+		correctionCount++;
+		if (correctionCount > 2) {
+			correctionCount = 0;
+		}
 	} else if (upDown == -1) {
-		
+		correctionCount--;
+		if (correctionCount < 0) {
+			correctionCount = 2;
+		}
 	}
 }
