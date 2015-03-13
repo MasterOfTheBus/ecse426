@@ -143,11 +143,11 @@ float getTilt(uint8_t type, float xyz[]) {
 int8_t tiltCorrection(float tilt, float inputTilt, uint8_t* currentTiltType) {
 	if (inputTilt - tilt <= 5 && inputTilt - tilt >= -5) {
 		// indicate which angle to correct for
-		if (*currentTiltType == ALPHA) {
-			*currentTiltType = BETA;
-		} else {
+//		if (*currentTiltType == ALPHA) {
+//			*currentTiltType = BETA;
+//		} else {
 			*currentTiltType = 2;
-		}
+		//}
 		return 0;
 	} else {
 		/*

@@ -77,13 +77,12 @@ int main(){
 	*	-	Enable hardware interrupt 
 	*
 	*/	
-	Timer_config(	1000,								// prescaler
+	Timer_config(	800,								// prescaler
 								TIM_CounterMode_Up,
 								400, 									// period
 								TIM_CKD_DIV1, 
 								0); 
 	setNumDisplay(n);
-	EnableTimerInterrupt();
 	EXTI_GenerateSWInterrupt(EXTI_Line0); // generate an interrupt to initialize the sampling process
 
 	//Collect alpha
@@ -106,7 +105,10 @@ int main(){
 	setUserInput(500);
 	GPIO_WriteBit(GPIOD, GPIO_Pin_12 | GPIO_Pin_14, Bit_RESET);
 
-	//setAngleDisplay(0);
+	EnableTimerInterrupt();
+
+	setAngleDisplay(0);
+
 	
 	while(1){
 
