@@ -13,6 +13,7 @@
 extern float numDisplay;
 static int TIM3_interrupt;
 extern int userInput;
+static int angleDisplay;
 
 /**
 	*	@brief Hardware Timer

@@ -18,7 +18,7 @@ int main(){
 	float tilt;
 	uint8_t angleType = ALPHA;
 	uint8_t upDown = 0;
-	int angleDisplay = 1;
+	//int angleDisplay = 1;
 
 /**
 	*	@brief Tilt detection using STM32F407VG (Accelerometer version M8997B)
@@ -85,7 +85,7 @@ int main(){
 								TIM_CKD_DIV1, 
 								0); 
 	numDisplay =n;
-//	EnableTimerInterrupt();
+	EnableTimerInterrupt();
 	
 	
 	EXTI_GenerateSWInterrupt(EXTI_Line0); // generate an interrupt to initialize the sampling process
@@ -93,11 +93,7 @@ int main(){
 	//Collect alpha
 	GPIO_WriteBit(GPIOD, GPIO_Pin_13 | GPIO_Pin_15, Bit_SET);
 	Keypad_read();
-//	int i = 0;
-//	while (i < 1000) {
-//		Display(.1, userInput);
-//		i++;
-//	}
+
 	// store user input in variable and reset user input
 	int alphaTilt = adjustInput(userInput);
 	printf("alphaTilt: %i\n", alphaTilt);
@@ -107,16 +103,14 @@ int main(){
 	// Collect beta
 	GPIO_WriteBit(GPIOD, GPIO_Pin_12 | GPIO_Pin_14, Bit_SET);
 	Keypad_read();
-//	i = 0;
-//	while (i < 1000) {
-//		Display(.1, userInput);
-//		i++;
-//	}
+
 	// store user input in variable and reset user input
 	int betaTilt = adjustInput(userInput);
 	userInput = 500;
 	GPIO_WriteBit(GPIOD, GPIO_Pin_12 | GPIO_Pin_14, Bit_RESET);
-	EnableTimerInterrupt();
+
+	//angleDisplay = 0;
+
 	while(1){
 
 			if (getITStatus()) {
@@ -129,7 +123,6 @@ int main(){
 				float xyz_float[3];
 
 				normalize(xyz, xyz_float); // normalize the data
-				printf("%f, %f, %f\n", xyz_float[0], xyz_float[1], xyz_float[2]);
 				
 				float f_xyz[3];
 
@@ -139,22 +132,22 @@ int main(){
 				Kalmanfilter_C(xyz_float[2], &f_xyz[2], &kstate_Z); // Z
 
 				tilt = getTilt(angleType, f_xyz);
-				
+				numDisplay = tilt;
 				printf("tilt: %f\n", tilt);
 
 			}
-			
+			/*
 			if (angleType != 2) {
 				float inputTilt = ((angleType == ALPHA) ? alphaTilt : betaTilt);
 				// upDown, 1 for up, -1 for down, 0 for done
 				upDown = tiltCorrection(tilt, inputTilt, &angleType);
 				//printf("updown: %i\n", upDown);
-				angleDisplay = 0;
+				//angleDisplay = 0;
 			} else {
-				angleDisplay = 1;
-			}
+				//angleDisplay = 1;
+			}*/
 
-			if (TIM3_interrupt) {
+			/*if (TIM3_interrupt) {
 				TIM3_interrupt = 0;
 			
 				if (angleDisplay) {
@@ -162,7 +155,7 @@ int main(){
 				} else {
 					correctionOutput(upDown);
 				}
-			}
+			}*/
 			
 	}
 	return 0;

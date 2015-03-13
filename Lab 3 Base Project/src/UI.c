@@ -19,7 +19,6 @@ int count;
 int lastResult;
 
 int correctionCount;
-static int angleDisplay;
 
 void Timer_config(uint16_t Prescaler,
 									uint16_t CounterMode,
@@ -57,13 +56,13 @@ void EnableTimerInterrupt(){
 
 void TIM3_IRQHandler(){
 	if (TIM_GetITStatus(TIM3, TIM_IT_Update) != RESET){
-		/*if (angleDisplay) {
+		if (angleDisplay) {
 			Display(numDisplay,userInput);
 		} else {
 			//correctionOutput(); // will not work, need the up down
-		}*/
+		}
 		
-		TIM3_interrupt = 1;
+		//TIM3_interrupt = 1;
 		TIM_ClearITPendingBit(TIM3, TIM_IT_Update);
 	}
 }
@@ -401,11 +400,6 @@ void Keypad_readDigit(){
 			}
 			else if (GPIO_ReadInputDataBit(GPIOC, GPIO_Pin_13) == Bit_SET){
 				result = 2;
-				configInit_GPIO(GPIOD, RCC_AHB1Periph_GPIOC,
-											GPIO_Pin_14,
-											GPIO_Mode_OUT, GPIO_Speed_100MHz, GPIO_OType_PP,
-											GPIO_PuPd_DOWN);
-				GPIO_ToggleBits(GPIOD, GPIO_Pin_14);
 			}
 		
 		} 
@@ -558,9 +552,9 @@ void Keypad_read(){
 
 	}
 			// Scale back!
-			if (readDigit == 3){
+			if (readDigit == 2){
 				userInput = userInput/100;
-			} else if (readDigit == 4){
+			} else if (readDigit == 3){
 				userInput = userInput/10;
 			} 
 			// done reading from user input
@@ -568,7 +562,6 @@ void Keypad_read(){
 										GPIO_Pin_13,
 										GPIO_Mode_OUT, GPIO_Speed_100MHz, GPIO_OType_PP,
 										GPIO_PuPd_DOWN);
-			GPIO_WriteBit(GPIOD, GPIO_Pin_13, Bit_SET);
 
 			return;
 }
