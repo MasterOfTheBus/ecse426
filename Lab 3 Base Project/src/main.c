@@ -78,9 +78,9 @@ int main(){
 	*	-	Enable hardware interrupt 
 	*
 	*/	
-	Timer_config(	3000,								// prescaler
+	Timer_config(	1000,								// prescaler
 								TIM_CounterMode_Up,
-								500, 									// period
+								400, 									// period
 								TIM_CKD_DIV1, 
 								0); 
 	setNumDisplay(n);
@@ -112,12 +112,12 @@ int main(){
 
 	
 	while(1){
-		if (getTimInt()) {
-				setTimInt(0);
+//		if (getTimInt()) {
+//				setTimInt(0);
 
-				float numD = getNumDisplay();
-					Display(numD/*, 500*/);
-			}
+//				float numD = getNumDisplay();
+//					Display(numD/*, 500*/);
+//			}
 		
 			//printf("looping\n");
 			if (getITStatus()) {
@@ -131,11 +131,11 @@ int main(){
 
 				normalize(xyz, xyz_float); // normalize the data
 				
-				if (getTimInt()) {
-				setTimInt(0);
-				float numD = getNumDisplay();
-					Display(numD/*, 500*/);
-			}
+//				if (getTimInt()) {
+//				setTimInt(0);
+//				float numD = getNumDisplay();
+//					Display(numD/*, 500*/);
+//			}
 				
 				float f_xyz[3];
 
@@ -144,12 +144,12 @@ int main(){
 				Kalmanfilter_C(xyz_float[1], &f_xyz[1], &kstate_Y); // Y
 				Kalmanfilter_C(xyz_float[2], &f_xyz[2], &kstate_Z); // Z
 			
-			if (getTimInt()) {
-				setTimInt(0);
+//			if (getTimInt()) {
+//				setTimInt(0);
 
-				float numD = getNumDisplay();
-					Display(numD/*, 500*/);
-			}
+//				float numD = getNumDisplay();
+//					Display(numD/*, 500*/);
+//			}
 
 				tilt = getTilt(angleType, f_xyz);
 				setNumDisplay(tilt);
