@@ -17,8 +17,7 @@ int main(){
 	
 	float tilt;
 	uint8_t angleType = ALPHA;
-	uint8_t upDown = 0;
-	//int angleDisplay = 1;
+	//uint8_t upDown = 0;
 
 /**
 	*	@brief Tilt detection using STM32F407VG (Accelerometer version M8997B)
@@ -84,10 +83,8 @@ int main(){
 								500, 									// period
 								TIM_CKD_DIV1, 
 								0); 
-	numDisplay =n;
+	setNumDisplay(n);
 	EnableTimerInterrupt();
-	
-	
 	EXTI_GenerateSWInterrupt(EXTI_Line0); // generate an interrupt to initialize the sampling process
 	
 	//Collect alpha
@@ -95,9 +92,9 @@ int main(){
 	Keypad_read();
 
 	// store user input in variable and reset user input
-	int alphaTilt = adjustInput(userInput);
+	int alphaTilt = adjustInput(getUserInput());
 	printf("alphaTilt: %i\n", alphaTilt);
-	userInput = 500;
+	setUserInput(500);
 	GPIO_WriteBit(GPIOD, GPIO_Pin_13 | GPIO_Pin_15, Bit_RESET);	
 
 	// Collect beta
@@ -105,14 +102,24 @@ int main(){
 	Keypad_read();
 
 	// store user input in variable and reset user input
-	int betaTilt = adjustInput(userInput);
-	userInput = 500;
+	int betaTilt = adjustInput(getUserInput());
+	printf("betaTilt: %i\n", betaTilt);
+	setUserInput(500);
 	GPIO_WriteBit(GPIOD, GPIO_Pin_12 | GPIO_Pin_14, Bit_RESET);
 
 	//angleDisplay = 0;
+	
 
+	
 	while(1){
+		if (getTimInt()) {
+				setTimInt(0);
 
+				float numD = getNumDisplay();
+					Display(numD/*, 500*/);
+			}
+		
+			//printf("looping\n");
 			if (getITStatus()) {
 				setITStatus(0);
 
@@ -124,15 +131,28 @@ int main(){
 
 				normalize(xyz, xyz_float); // normalize the data
 				
+				if (getTimInt()) {
+				setTimInt(0);
+				float numD = getNumDisplay();
+					Display(numD/*, 500*/);
+			}
+				
 				float f_xyz[3];
 
 				// filter the data
 				Kalmanfilter_C(xyz_float[0], &f_xyz[0], &kstate_X); // X
 				Kalmanfilter_C(xyz_float[1], &f_xyz[1], &kstate_Y); // Y
 				Kalmanfilter_C(xyz_float[2], &f_xyz[2], &kstate_Z); // Z
+			
+			if (getTimInt()) {
+				setTimInt(0);
+
+				float numD = getNumDisplay();
+					Display(numD/*, 500*/);
+			}
 
 				tilt = getTilt(angleType, f_xyz);
-				numDisplay = tilt;
+				setNumDisplay(tilt);
 				printf("tilt: %f\n", tilt);
 
 			}
@@ -147,15 +167,18 @@ int main(){
 				//angleDisplay = 1;
 			}*/
 
-			/*if (TIM3_interrupt) {
-				TIM3_interrupt = 0;
-			
-				if (angleDisplay) {
-					Display(numDisplay, 500);
-				} else {
-					correctionOutput(upDown);
-				}
-			}*/
+			if (getTimInt()) {
+				setTimInt(0);
+
+				//if (angleDisplay) {
+
+				float numD = getNumDisplay();
+					Display(numD/*, 500*/);
+
+				//} else {
+					//correctionOutput(upDown);
+				//}
+			}
 			
 	}
 	return 0;

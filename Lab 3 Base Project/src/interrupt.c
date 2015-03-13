@@ -10,7 +10,8 @@ int getITStatus() {
 }
 
 void InitInterrupt() {
-	accel_interrupt = 0;
+	//accel_interrupt = 0;
+	setITStatus(0);
 	
 	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOE, ENABLE);
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
@@ -43,8 +44,8 @@ void InitInterrupt() {
 
 void EXTI0_IRQHandler(void) {
 	if (EXTI_GetITStatus(EXTI_Line0) != RESET) {
-		accel_interrupt = 1;
-
+		//accel_interrupt = 1;
+		setITStatus(1);
 		EXTI_ClearITPendingBit(EXTI_Line0);
 	}
 }

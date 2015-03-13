@@ -10,10 +10,20 @@
 	@params Clock division
 	@params Repetition counter
 	*/
-extern float numDisplay;
+static float numDisplay;
+static int TIM3_interrupt_count;
 static int TIM3_interrupt;
-extern int userInput;
+static int userInput;
 static int angleDisplay;
+
+void setAngleDisplay(int val);
+int getAngleDisplay(void);
+void setTimInt(int val);
+int getTimInt(void);
+void setUserInput(int val);
+int getUserInput(void);
+void setNumDisplay(float val);
+float getNumDisplay(void);
 
 /**
 	*	@brief Hardware Timer
@@ -51,7 +61,7 @@ void TIM3_IRQHandler(void);
 	*	- Call digit displays accordingly
 	*
 	*/
-void Display(float n, int input);
+void Display(float n/*, int input*/);
 
 /**
 	*	@brief 7-segment display digit definition

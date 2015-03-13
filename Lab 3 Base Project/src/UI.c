@@ -13,8 +13,6 @@ int result = 0;
 int readDigit;
 int displayUserInput = 0;
 int keypadWait = 10;
-float numDisplay;
-int userInput;
 int count;
 int lastResult;
 
@@ -43,8 +41,42 @@ void Timer_config(uint16_t Prescaler,
 	angleDisplay = 1;
 }
 
+void setAngleDisplay(int val) {
+	angleDisplay = val;
+}
+
+int getAngleDisplay(void) {
+	return (angleDisplay);
+}
+
+void setTimInt(int val) {
+	TIM3_interrupt = val;
+}
+
+int getTimInt(void) {
+	return (TIM3_interrupt);
+}
+
+void setUserInput(int val) {
+	userInput = val;
+}
+
+int getUserInput(void) {
+	return (userInput);
+}
+
+void setNumDisplay(float val) {
+	numDisplay = val;
+}
+
+float getNumDisplay(void) {
+	return numDisplay;
+}
 	
 void EnableTimerInterrupt(){
+	TIM3_interrupt_count = 0;
+	TIM3_interrupt = 0;
+	
 	NVIC_InitTypeDef nvic_init;
 	nvic_init.NVIC_IRQChannel = TIM3_IRQn;
 	nvic_init.NVIC_IRQChannelPreemptionPriority = 0x02;
@@ -56,13 +88,17 @@ void EnableTimerInterrupt(){
 
 void TIM3_IRQHandler(){
 	if (TIM_GetITStatus(TIM3, TIM_IT_Update) != RESET){
-		if (angleDisplay) {
-			Display(numDisplay,userInput);
-		} else {
+		//if (angleDisplay) {
+			//Display(numDisplay,userInput);
+		//} else {
 			//correctionOutput(); // will not work, need the up down
-		}
+		//}
 		
-		//TIM3_interrupt = 1;
+		TIM3_interrupt = 1;
+		TIM3_interrupt_count++;
+		if (TIM3_interrupt_count > 3) {
+			TIM3_interrupt_count = 0;
+		}
 		TIM_ClearITPendingBit(TIM3, TIM_IT_Update);
 	}
 }
@@ -140,25 +176,27 @@ void displayDigit(int digit) {
 				Nine();
 }
 
-void Display(float n, int input){
-	
-	if (input !=500 ){
-	 m = input;
-		decimal = 0;
-	}
-	else{
+void Display(float n/*, int input*/){
+//	if (input !=500 ){
+//	 m = input;
+//		decimal = 0;
+//	}
+//	else{
 		m = (int)n; 			// extract integer part
 		n = n-(float)(m);		// extract floating point part
 		
 		if (m>=100){
 			decimal = 0;					// ignore any floating point
 		}
-		else{
+		else if (m >= 10){
 			decimal = 1;
 			m = m*10 + (int)(n*10);
+		} else {
+			decimal = 2;
+			m = m* 100 + (int)(n*100);
 		}
-	}
-		
+//	}
+
 		for (i=0; i<3;i++){
 			digits[i] = (int)(m%10);
 			m = (m-(m%10))/10;
@@ -166,35 +204,44 @@ void Display(float n, int input){
 		//printf ("%i %i %i",digits[2], digits[1], digits[0]);
 
 		// Get hardware timer value
-		timerValue = TIM_GetCounter(TIM3);
-		
+		//timerValue = TIM_GetCounter(TIM3);
 		
 		// Set first digit
-			while (TIM_GetCounter(TIM3) < (timerValue+1*setTime)){
+		if (TIM3_interrupt_count == 0) {
+			
+		
+		//	while (TIM_GetCounter(TIM3) < (timerValue+1*setTime)){
+
 			GPIO_WriteBit(GPIOE, GPIO_Pin_8 | GPIO_Pin_10 | GPIO_Pin_12 | GPIO_Pin_14, Bit_RESET); // Release other select lines
 			GPIO_WriteBit(GPIOD, GPIO_Pin_9, Bit_RESET);
 			GPIO_WriteBit(GPIOE, GPIO_Pin_7, Bit_SET);		// Select digit 1
 			GPIO_WriteBit(GPIOE, GPIO_Pin_13 , Bit_RESET);	// Reset decimal point
-			
+			if (decimal == 2) {
+				GPIO_WriteBit(GPIOE, GPIO_Pin_13 , Bit_SET);	// Set decimal point
+			}
 			displayDigit(2);
 		}
 		
-		
+		//printf("second loop\n");
 		// Set second digit
-		while (TIM_GetCounter(TIM3) < (timerValue+2*setTime)){
+		if (TIM3_interrupt_count == 1) {
+		//while (TIM_GetCounter(TIM3) < (timerValue+2*setTime)){
+			//printf("get counter2: %i\n", TIM_GetCounter(TIM3));
 			GPIO_WriteBit(GPIOE, GPIO_Pin_7 | GPIO_Pin_10 | GPIO_Pin_12 | GPIO_Pin_14, Bit_RESET); // Release other select lines
 			GPIO_WriteBit(GPIOD, GPIO_Pin_9, Bit_RESET);
 			GPIO_WriteBit(GPIOE, GPIO_Pin_8, Bit_SET);		// Select digit 2
-			
+			GPIO_WriteBit(GPIOE, GPIO_Pin_13 , Bit_RESET);	// Reset decimal point
 			if (decimal){
 				GPIO_WriteBit(GPIOE, GPIO_Pin_13 , Bit_SET);	// Set decimal point
 			}
 
 			displayDigit(1);
 		}
-		
+		//printf("third loop\n");
 		// Set third digit
-		while (TIM_GetCounter(TIM3) < (timerValue+3*setTime)){
+		if (TIM3_interrupt_count == 2) {
+		//while (TIM_GetCounter(TIM3) < (timerValue+3*setTime)){
+			//printf("get counter3: %i\t %i\n", TIM_GetCounter(TIM3), (timerValue+3*setTime));
 			GPIO_WriteBit(GPIOE, GPIO_Pin_7 | GPIO_Pin_8 | GPIO_Pin_10 | GPIO_Pin_14, Bit_RESET); // Release other select lines
 			GPIO_WriteBit(GPIOD, GPIO_Pin_9, Bit_RESET);
 			GPIO_WriteBit(GPIOE, GPIO_Pin_12, Bit_SET);		// Select digit 3
@@ -203,11 +250,12 @@ void Display(float n, int input){
 			displayDigit(0);
 		}
 		
-		// Set degree
-		GPIO_WriteBit(GPIOE, GPIO_Pin_7 | GPIO_Pin_8 | GPIO_Pin_10 | GPIO_Pin_12 | GPIO_Pin_14, Bit_RESET); // Release other select lines
-		GPIO_WriteBit(GPIOD, GPIO_Pin_9, Bit_SET);	// Select degree
-		GPIO_WriteBit(GPIOD, GPIO_Pin_10 , Bit_SET);	// Turn on degree LED
-
+		if (TIM3_interrupt_count == 3) {
+			// Set degree
+			GPIO_WriteBit(GPIOE, GPIO_Pin_7 | GPIO_Pin_8 | GPIO_Pin_10 | GPIO_Pin_12 | GPIO_Pin_14, Bit_RESET); // Release other select lines
+			GPIO_WriteBit(GPIOD, GPIO_Pin_9, Bit_SET);	// Select degree
+			GPIO_WriteBit(GPIOD, GPIO_Pin_10 , Bit_SET);	// Turn on degree LED
+		}
 }
 
 	
