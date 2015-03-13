@@ -17,7 +17,6 @@ int main(){
 	
 	float tilt;
 	uint8_t angleType = ALPHA;
-	//uint8_t upDown = 0;
 
 /**
 	*	@brief Tilt detection using STM32F407VG (Accelerometer version M8997B)
@@ -107,9 +106,7 @@ int main(){
 	setUserInput(500);
 	GPIO_WriteBit(GPIOD, GPIO_Pin_12 | GPIO_Pin_14, Bit_RESET);
 
-	//angleDisplay = 0;
-	
-
+	//setAngleDisplay(0);
 	
 	while(1){
 
@@ -124,7 +121,6 @@ int main(){
 
 				normalize(xyz, xyz_float); // normalize the data
 				
-				
 				float f_xyz[3];
 
 				// filter the data
@@ -137,28 +133,29 @@ int main(){
 				printf("tilt: %f\n", tilt);
 
 			}
-			/*
+			int8_t upDown;
+			float inputTilt;
 			if (angleType != 2) {
-				float inputTilt = ((angleType == ALPHA) ? alphaTilt : betaTilt);
+				inputTilt = ((angleType == ALPHA) ? alphaTilt : betaTilt);
 				// upDown, 1 for up, -1 for down, 0 for done
 				upDown = tiltCorrection(tilt, inputTilt, &angleType);
 				//printf("updown: %i\n", upDown);
-				//angleDisplay = 0;
+								
 			} else {
-				//angleDisplay = 1;
-			}*/
+				setAngleDisplay(1);
+			}
 
+
+			
 			if (getTimInt()) {
 				setTimInt(0);
 
-				//if (angleDisplay) {
+				if (getAngleDisplay()) {
+					Display(getNumDisplay());
 
-				float numD = getNumDisplay();
-				Display(numD/*, 500*/);
-
-				//} else {
-					//correctionOutput(upDown);
-				//}
+				} else {
+					correctionOutput(upDown);
+				}
 			}
 			
 	}
