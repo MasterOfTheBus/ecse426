@@ -16,7 +16,7 @@ int keypadWait = 10;
 int count;
 int lastResult;
 
-int correctionCount;
+int correctionCount=0;
 
 void Timer_config(uint16_t Prescaler,
 									uint16_t CounterMode,
@@ -616,10 +616,10 @@ void Keypad_read(){
 
 void correctionOutput(int8_t upDown) {
 	// display
-	GPIO_WriteBit(GPIOE, GPIO_Pin_8 | GPIO_Pin_10 | GPIO_Pin_12 | GPIO_Pin_14, Bit_RESET); // Release other select lines
-	GPIO_WriteBit(GPIOD, GPIO_Pin_9, Bit_RESET);
-	GPIO_WriteBit(GPIOE, GPIO_Pin_7, Bit_SET);		// Select digit 1
-	GPIO_WriteBit(GPIOE, GPIO_Pin_13 , Bit_RESET);	// Reset decimal point
+			GPIO_WriteBit(GPIOE, GPIO_Pin_8 | GPIO_Pin_10 | GPIO_Pin_12 | GPIO_Pin_14, Bit_RESET); // Release other select lines
+			GPIO_WriteBit(GPIOD, GPIO_Pin_9, Bit_RESET);
+			GPIO_WriteBit(GPIOE, GPIO_Pin_7, Bit_SET);		// Select digit 1
+			GPIO_WriteBit(GPIOE, GPIO_Pin_13 , Bit_RESET);	// Reset decimal point
 	switch (correctionCount) {
 		case 0: // bottom line
 			GPIO_WriteBit(GPIOE, GPIO_Pin_9, Bit_SET);

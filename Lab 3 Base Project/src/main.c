@@ -109,15 +109,8 @@ int main(){
 
 	//angleDisplay = 0;
 	
-
-	
 	while(1){
-//		if (getTimInt()) {
-//				setTimInt(0);
 
-//				float numD = getNumDisplay();
-//					Display(numD/*, 500*/);
-//			}
 		
 			//printf("looping\n");
 			if (getITStatus()) {
@@ -131,11 +124,7 @@ int main(){
 
 				normalize(xyz, xyz_float); // normalize the data
 				
-//				if (getTimInt()) {
-//				setTimInt(0);
-//				float numD = getNumDisplay();
-//					Display(numD/*, 500*/);
-//			}
+
 				
 				float f_xyz[3];
 
@@ -144,40 +133,38 @@ int main(){
 				Kalmanfilter_C(xyz_float[1], &f_xyz[1], &kstate_Y); // Y
 				Kalmanfilter_C(xyz_float[2], &f_xyz[2], &kstate_Z); // Z
 			
-//			if (getTimInt()) {
-//				setTimInt(0);
 
-//				float numD = getNumDisplay();
-//					Display(numD/*, 500*/);
-//			}
 
 				tilt = getTilt(angleType, f_xyz);
 				setNumDisplay(tilt);
 				printf("tilt: %f\n", tilt);
 
 			}
-			/*
+			int8_t upDown;
+			float inputTilt;
 			if (angleType != 2) {
-				float inputTilt = ((angleType == ALPHA) ? alphaTilt : betaTilt);
+				inputTilt = ((angleType == ALPHA) ? alphaTilt : betaTilt);
 				// upDown, 1 for up, -1 for down, 0 for done
 				upDown = tiltCorrection(tilt, inputTilt, &angleType);
 				//printf("updown: %i\n", upDown);
-				//angleDisplay = 0;
+								
 			} else {
-				//angleDisplay = 1;
-			}*/
+				setAngleDisplay(1);
+			}
 
+
+			
 			if (getTimInt()) {
 				setTimInt(0);
 
-				//if (angleDisplay) {
+				if (getAngleDisplay) {
 
-				float numD = getNumDisplay();
-					Display(numD/*, 500*/);
+					float numD = getNumDisplay();
+					Display(numD);
 
-				//} else {
-					//correctionOutput(upDown);
-				//}
+				} else {
+					correctionOutput(upDown);
+				}
 			}
 			
 	}
