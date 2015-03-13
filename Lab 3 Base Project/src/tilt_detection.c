@@ -89,12 +89,12 @@ void calibrateSensor() {
 
 	// Zb down, Zb up, Yb down, Yb up, Xb down, Xb up
 	// previously acquired calibration data
-	float w_data[] = {-504, 468, 1494, 1,
-										-504, 486, -594, 1,
-										-522, -522, 414, 1,
-										-540, 1476, 396, 1,
-										-1512, 468, 396, 1,
-										486, 486, 432, 1};
+	float w_data[] = {-517, 488, 1477, 1,
+										-521, 502, -596, 1,
+										-516, -519, 438, 1,
+										-527, 1477, 439, 1,
+										-1507, 506, 439, 1,
+										478, 459, 481, 1};
 
 	arm_mat_init_f32(&w, 6, 4, w_data);
 	

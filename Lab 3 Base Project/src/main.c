@@ -86,7 +86,7 @@ int main(){
 	setNumDisplay(n);
 	EnableTimerInterrupt();
 	EXTI_GenerateSWInterrupt(EXTI_Line0); // generate an interrupt to initialize the sampling process
-	
+
 	//Collect alpha
 	GPIO_WriteBit(GPIOD, GPIO_Pin_13 | GPIO_Pin_15, Bit_SET);
 	Keypad_read();
@@ -112,14 +112,7 @@ int main(){
 
 	
 	while(1){
-//		if (getTimInt()) {
-//				setTimInt(0);
 
-//				float numD = getNumDisplay();
-//					Display(numD/*, 500*/);
-//			}
-		
-			//printf("looping\n");
 			if (getITStatus()) {
 				setITStatus(0);
 
@@ -131,11 +124,6 @@ int main(){
 
 				normalize(xyz, xyz_float); // normalize the data
 				
-//				if (getTimInt()) {
-//				setTimInt(0);
-//				float numD = getNumDisplay();
-//					Display(numD/*, 500*/);
-//			}
 				
 				float f_xyz[3];
 
@@ -143,13 +131,6 @@ int main(){
 				Kalmanfilter_C(xyz_float[0], &f_xyz[0], &kstate_X); // X
 				Kalmanfilter_C(xyz_float[1], &f_xyz[1], &kstate_Y); // Y
 				Kalmanfilter_C(xyz_float[2], &f_xyz[2], &kstate_Z); // Z
-			
-//			if (getTimInt()) {
-//				setTimInt(0);
-
-//				float numD = getNumDisplay();
-//					Display(numD/*, 500*/);
-//			}
 
 				tilt = getTilt(angleType, f_xyz);
 				setNumDisplay(tilt);
@@ -173,7 +154,7 @@ int main(){
 				//if (angleDisplay) {
 
 				float numD = getNumDisplay();
-					Display(numD/*, 500*/);
+				Display(numD/*, 500*/);
 
 				//} else {
 					//correctionOutput(upDown);
