@@ -30,8 +30,7 @@
 #if calibrate
 static float cal_data[12];
 #else	
-// calibration completed
-// values from matlab
+// calibration values from matlab
 static float cal_data[] = {-0.001007704542329, -0.000023576795574, -0.000020500331472,
 													 -0.000005549672267, -0.001001988618073, -0.000000555682904,
 													 0.000001981760320, -0.000006760475090, 0.000964570821189,
@@ -64,7 +63,7 @@ void calibrateSensor(void);
 /**
 	@brief Normalize the accelerometer data
 
-	Apply the calibration parameters to the data
+	Apply the calibration parameters to the data to scale to 1g
 
 	@param data The accelerometer data
 	@param result The normalized data

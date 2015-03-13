@@ -18,14 +18,14 @@ void InitInterrupt() {
 	
 	/* Configure GPIO PINs to detect Interrupts */
 	GPIO_InitTypeDef GPIO_InitStructure;
-  GPIO_InitStructure.GPIO_Pin = LIS302DL_SPI_INT1_PIN; // The pin to read interrupt data from
+  GPIO_InitStructure.GPIO_Pin = LIS302DL_SPI_INT1_PIN; // The pin to read interrupt data from; the accelerometer in this case
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN; // input from GPIO
   GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz; // match sample rate
-  GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_NOPULL; // by default read 0, not floating
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
+  GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_NOPULL; // floating
   GPIO_Init(LIS302DL_SPI_INT1_GPIO_PORT, &GPIO_InitStructure);
   
-	SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOE, EXTI_PinSource0);
+	SYSCFG_EXTILineConfig(EXTI_PortSourceGPIOE, EXTI_PinSource0); // the interrupt port is GPIOE
 	
 	EXTI_InitTypeDef exti_init;
 	exti_init.EXTI_Line = EXTI_Line0; // line 0
@@ -36,8 +36,8 @@ void InitInterrupt() {
 	
 	NVIC_InitTypeDef nvic_init;
 	nvic_init.NVIC_IRQChannel = EXTI0_IRQn; // exti line 0 matching exti
-	nvic_init.NVIC_IRQChannelPreemptionPriority = 0x01; // low priority
-	nvic_init.NVIC_IRQChannelSubPriority = 0x01; // low priority
+	nvic_init.NVIC_IRQChannelPreemptionPriority = 0x01; // high priority
+	nvic_init.NVIC_IRQChannelSubPriority = 0x01; // high priority
 	nvic_init.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&nvic_init);	
 }

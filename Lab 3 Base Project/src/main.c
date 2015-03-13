@@ -8,7 +8,7 @@
 #include "stm32f4xx_tim.h"
 float n=000;
 
-#define ALPHA_ONLY 1
+#define ALPHA_ONLY 0 // test for ALPHA angle only
 
 // adjust for any input greater than 360
 int adjustInput(int input) {
@@ -33,8 +33,12 @@ int main(){
 	Accel_InitConfig(LIS302DL_LOWPOWERMODE_ACTIVE, // power on the mems sensor
 									 LIS302DL_DATARATE_100, // Data rate at 100 Hz as specified
 									 LIS302DL_X_ENABLE | LIS302DL_Y_ENABLE | LIS302DL_Z_ENABLE,  // Enable all the axes
-									 LIS302DL_SENSITIVITY_2_3G, // We won't get up to 9 g's of force in this lab
-									 LIS302DL_SELFTEST_NORMAL); // self test?
+									 LIS302DL_SENSITIVITY_2_3G, // We won't get up to 9 g's of force in this lab, only tilting
+																							// sensitivity is the gain of the sensor; average of +1g and -1g direction
+																							// adjust raw data by 18mg/digit
+									 LIS302DL_SELFTEST_NORMAL); // self test off
+																							// when enabled, will generate a defined actuation force
+																							// if output signal is within defined parameters, then the sensor is working
 	
 	InitInterrupt();
 	
@@ -152,19 +156,18 @@ int main(){
 				if (upDown == 0) {
 					GPIO_WriteBit(GPIOD, GPIO_Pin_12, Bit_SET);
 				}
-				//printf("updown: %i\n", upDown);
 								
 			} else {
-				GPIO_WriteBit(GPIOD, GPIO_Pin_12, Bit_RESET);
+				GPIO_WriteBit(GPIOD, GPIO_Pin_12, Bit_RESET); // toggle an LED to indicate that ALPHA has been found
 				angleType = prevType;
 				setAngleDisplay(1);
 			}
 #endif
 
-			
+			// display interrupt
 			if (getTimInt()) {
 				setTimInt(0);
-
+				// check if displaying angles or correction animation
 				if (getAngleDisplay()) {
 					Display(getNumDisplay());
 

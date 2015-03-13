@@ -76,6 +76,7 @@ void calibrateSensor() {
 	arm_mat_init_f32(&calParams, 4, 3, cal_data);
 	
 	// normalized vectors at 6 positions
+	//Y = wX
 	arm_matrix_instance_f32 Y;
 	float y_data[] = {0, 0, 1,
 										0, 0, -1,
