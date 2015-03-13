@@ -557,6 +557,7 @@ void Keypad_readDigit(){
 void Keypad_read(){
 	while (result == 22 || result == 99) {
 		Keypad_readDigit();
+		TIM3_interrupt_count=0;
 	}
 	userInput = 0;
 	lastResult = 99;
@@ -564,6 +565,11 @@ void Keypad_read(){
 	readDigit = 1;
 	while (result != 22 || result != 21){
 		Keypad_readDigit();
+		TIM3_interrupt_count++;					// using interrpt count as a counter to display user input
+		if (TIM3_interrupt_count > 3) {
+			TIM3_interrupt_count = 0;
+		}
+		Display((float)userInput);			// display user input
 		if (result != lastResult && result < 10 && count > 5){
 						
 				if (readDigit == 1){

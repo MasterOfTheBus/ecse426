@@ -8,6 +8,8 @@
 #include "stm32f4xx_tim.h"
 float n=000;
 
+#define ALPHA_ONLY 1
+
 // adjust for any input greater than 360
 int adjustInput(int input) {
 	return ((input <= 360) ? input : (input % 360));
@@ -17,6 +19,7 @@ int main(){
 	
 	float tilt;
 	uint8_t angleType = ALPHA;
+	uint8_t prevType = angleType;
 
 /**
 	*	@brief Tilt detection using STM32F407VG (Accelerometer version M8997B)
@@ -107,8 +110,10 @@ int main(){
 
 	EnableTimerInterrupt();
 
-	setAngleDisplay(0);
 
+#if !ALPHA_ONLY
+	setAngleDisplay(0);
+#endif
 	
 	while(1){
 
@@ -135,18 +140,26 @@ int main(){
 				printf("tilt: %f\n", tilt);
 
 			}
+
 			int8_t upDown;
+#if !ALPHA_ONLY
 			float inputTilt;
 			if (angleType != 2) {
 				inputTilt = ((angleType == ALPHA) ? alphaTilt : betaTilt);
 				// upDown, 1 for up, -1 for down, 0 for done
+				prevType = angleType;
 				upDown = tiltCorrection(tilt, inputTilt, &angleType);
+				if (upDown == 0) {
+					GPIO_WriteBit(GPIOD, GPIO_Pin_12, Bit_SET);
+				}
 				//printf("updown: %i\n", upDown);
 								
 			} else {
+				GPIO_WriteBit(GPIOD, GPIO_Pin_12, Bit_RESET);
+				angleType = prevType;
 				setAngleDisplay(1);
 			}
-
+#endif
 
 			
 			if (getTimInt()) {
