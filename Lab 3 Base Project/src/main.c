@@ -40,7 +40,7 @@ int main(){
 																							// when enabled, will generate a defined actuation force
 																							// if output signal is within defined parameters, then the sensor is working
 	
-	InitInterrupt();
+	InitInterrupt(LIS302DL_SPI_INT1_PIN, LIS302DL_SPI_INT1_GPIO_PORT, EXTI_PortSourceGPIOE, EXTI_PinSource0, EXTI_Line0, EXTI0_IRQn, 0x01, 0x01);
 	
 	
 /**
@@ -99,7 +99,6 @@ int main(){
 	// store user input in variable and reset user input
 	int alphaTilt = adjustInput(getUserInput());
 	printf("alphaTilt: %i\n", alphaTilt);
-	setUserInput(500);
 	GPIO_WriteBit(GPIOD, GPIO_Pin_13 | GPIO_Pin_15, Bit_RESET);	
 
 	// Collect beta
@@ -109,7 +108,6 @@ int main(){
 	// store user input in variable and reset user input
 	int betaTilt = adjustInput(getUserInput());
 	printf("betaTilt: %i\n", betaTilt);
-	setUserInput(500);
 	GPIO_WriteBit(GPIOD, GPIO_Pin_12 | GPIO_Pin_14, Bit_RESET);
 
 	EnableTimerInterrupt();
@@ -167,6 +165,14 @@ int main(){
 			// display interrupt
 			if (getTimInt()) {
 				setTimInt(0);
+				
+				int count = getTimIntCount();
+				if (count > 3) {
+					setTimIntCount(0);
+				} else {
+					setTimIntCount(count+1);
+				}
+				
 				// check if displaying angles or correction animation
 				if (getAngleDisplay()) {
 					Display(getNumDisplay());

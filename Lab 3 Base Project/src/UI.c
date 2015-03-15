@@ -49,6 +49,14 @@ int getAngleDisplay(void) {
 	return (angleDisplay);
 }
 
+void setTimIntCount(int val) {
+	TIM3_interrupt_count = val;
+}
+
+int getTimIntCount(void) {
+	return (TIM3_interrupt_count);
+}
+
 void setTimInt(int val) {
 	TIM3_interrupt = val;
 }
@@ -89,10 +97,7 @@ void EnableTimerInterrupt(){
 void TIM3_IRQHandler(){
 	if (TIM_GetITStatus(TIM3, TIM_IT_Update) != RESET){
 		TIM3_interrupt = 1;
-		TIM3_interrupt_count++;
-		if (TIM3_interrupt_count > 3) {
-			TIM3_interrupt_count = 0;
-		}
+
 		TIM_ClearITPendingBit(TIM3, TIM_IT_Update);
 	}
 }
@@ -147,6 +152,7 @@ void GPIO_config(){
 
 }
 
+// Display helper method to select the digit to display
 void displayDigit(int digit) {
 			if (digits[digit]==0)
 				Zero();
@@ -170,7 +176,7 @@ void displayDigit(int digit) {
 				Nine();
 }
 
-void Display(float n/*, int input*/){
+void Display(float n){
 //	if (input !=500 ){
 //	 m = input;
 //		decimal = 0;
