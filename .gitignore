@@ -1,4 +1,4 @@
-Objects
+Objects/*
 Listings
 KalmanFilter.uvguix.TQ
 KalmanFilter.uvoptx
@@ -7,7 +7,7 @@ MicroP-Lab1/*uv*
 *guix*
 *.bak
 *.uvoptx
-*object*
+*object/*
 *.7z
 *build_log.htm
 obj
