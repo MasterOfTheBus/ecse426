@@ -9,7 +9,20 @@
 #include <stdio.h>
 
 #include "kalman.h"
-#Include "tilt_detection.h"
+#include "interrupt.h"
+#include "tilt_detection.h"
+
+#include "ADC.h"
+#include "temperature.h"
+#include "timer.h"
+
+// kalman state for temperature
+kalman_state kstate = {0.0025, 5.0, 1100.0, 0.0, 0.0};
+
+// kalman state for accelerometer
+kalman_state kstate_X = {0.025, 5, 0, 0, 0};
+kalman_state kstate_Y = {0.025, 5, 0, 0, 0};
+kalman_state kstate_Z = {0.025, 5, 0, 0, 0};
 
 void Blinky_GPIO_Init(void){
 	GPIO_InitTypeDef GPIO_InitStructure;
@@ -33,8 +46,27 @@ void Blinky(void const *argument){
 	}
 }
 
-void AccelerationGet(void const *argument) {
+void GetTemp(void const *argument) {
 	while (1) {
+		if (getTimInt()) {
+			 setTimInt(0);				//Reset tick
+			float f_output;
+			
+			// Get Temerature and Filtering
+			if (Kalmanfilter_C(getTemp(), &f_output, &kstate) != 0) {
+				continue;
+			}
+			printf("filtered: %f\n", f_output);
+			// Convert to temperature
+			float temp_C = voltage2temp(f_output);
+			printf("temp: %f\n", temp_C);
+		}
+	}
+}
+
+void GetTilt(void const *argument) {
+	while (1) {
+
 		if (getITStatus()) {
 				setITStatus(0);
 
@@ -45,33 +77,38 @@ void AccelerationGet(void const *argument) {
 				float xyz_float[3];
 
 				normalize(xyz, xyz_float); // normalize the data
-				
-				float f_xyz[3];
 
 				// filter the data
-				Kalmanfilter_C(xyz_float[0], &f_xyz[0], &kstate_X); // X
-				Kalmanfilter_C(xyz_float[1], &f_xyz[1], &kstate_Y); // Y
-				Kalmanfilter_C(xyz_float[2], &f_xyz[2], &kstate_Z); // Z
+				Kalmanfilter_C(xyz_float[0], &xyz_float[0], &kstate_X); // X
+				Kalmanfilter_C(xyz_float[1], &xyz_float[1], &kstate_Y); // Y
+				Kalmanfilter_C(xyz_float[2], &xyz_float[2], &kstate_Z); // Z
 
-				tilt = getTilt(angleType, f_xyz);
-				setNumDisplay(tilt);
+				float tilt = getTilt(BETA, xyz_float);
+				//setNumDisplay(tilt);
 				printf("tilt: %f\n", tilt);
 
 		}
+		osDelay(250);
 	}
 }
 
-void AccelerationDisplay(void const *argument) {
-	
-}
 
 osThreadDef(Blinky, osPriorityNormal, 1, 0);
+osThreadDef(GetTilt, osPriorityNormal, 1, 0);
 
 /*
  * main: initialize and start the system
  */
 int main (void) {
-	// ----------------------Initialization----------------------
+  osKernelInitialize ();                    // initialize CMSIS-RTOS
+	
+	// ID for thread
+	osThreadId	Blinky_thread;
+	osThreadId GetTilt_thread;
+	
+  // initialize peripherals here
+	Blinky_GPIO_Init();
+
 	Accel_InitConfig(LIS302DL_LOWPOWERMODE_ACTIVE, // power on the mems sensor
 									 LIS302DL_DATARATE_100, // Data rate at 100 Hz as specified
 									 LIS302DL_X_ENABLE | LIS302DL_Y_ENABLE | LIS302DL_Z_ENABLE,  // Enable all the axes
@@ -84,22 +121,12 @@ int main (void) {
 	
 	InitInterrupt(LIS302DL_SPI_INT1_PIN, LIS302DL_SPI_INT1_GPIO_PORT, EXTI_PortSourceGPIOE, EXTI_PinSource0, EXTI_Line0, EXTI0_IRQn, 0x01, 0x01);
 	
-	// kalman state for accelerometer
-	kalman_state kstate_X = {0.025, 5, 0, 0, 0};
-	kalman_state kstate_Y = {0.025, 5, 0, 0, 0};
-	kalman_state kstate_Z = {0.025, 5, 0, 0, 0};
-	
-  osKernelInitialize ();                    // initialize CMSIS-RTOS
-	
-	// ID for thread
-	osThreadId	Blinky_thread;
-	
-  // initialize peripherals here
-	Blinky_GPIO_Init();
+	EXTI_GenerateSWInterrupt(EXTI_Line0); // generate an interrupt to initialize the sampling process
 	
   // create 'thread' functions that start executing,
   // example: tid_name = osThreadCreate (osThread(name), NULL);
 	Blinky_thread = osThreadCreate(osThread(Blinky), NULL);
+	//GetTilt_thread = osThreadCreate(osThread(GetTilt), NULL);
 	
 	osKernelStart ();                         // start thread execution 
 }
