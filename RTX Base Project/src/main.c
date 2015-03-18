@@ -16,6 +16,8 @@
 #include "temperature.h"
 #include "timer.h"
 
+#include "UI.h"
+
 // kalman state for temperature
 kalman_state kstate = {0.0025, 5.0, 1100.0, 0.0, 0.0};
 
@@ -92,9 +94,24 @@ void GetTilt(void const *argument) {
 	}
 }
 
+void ReadKeypad(void const *argument){
+	while(1){
+		Keypad_read();				// check keypad
+		osDelay(100);					
+	}
+}
+
+void Display7Segment(void const *argument){
+	while(1){
+	//	Display();
+	}
+}
+
 
 osThreadDef(Blinky, osPriorityNormal, 1, 0);
 osThreadDef(GetTilt, osPriorityNormal, 1, 0);
+osThreadDef (ReadKeypad, osPriorityNormal, 1, 0);
+
 
 /*
  * main: initialize and start the system
@@ -105,6 +122,7 @@ int main (void) {
 	// ID for thread
 	osThreadId	Blinky_thread;
 	osThreadId GetTilt_thread;
+	osThreadId ReadKeypad_thread;
 	
   // initialize peripherals here
 	Blinky_GPIO_Init();
@@ -127,6 +145,8 @@ int main (void) {
   // example: tid_name = osThreadCreate (osThread(name), NULL);
 	Blinky_thread = osThreadCreate(osThread(Blinky), NULL);
 	//GetTilt_thread = osThreadCreate(osThread(GetTilt), NULL);
+	
+	ReadKeypad_thread = osThreadCreate(osThread(ReadKeypad), NULL);
 	
 	osKernelStart ();                         // start thread execution 
 }
