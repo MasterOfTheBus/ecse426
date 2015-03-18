@@ -8,72 +8,58 @@
 #include "stm32f4xx_conf.h"
 #include <stdio.h>
 
+//#include "thread.h"
+
 #include "kalman.h"
 #include "interrupt.h"
 #include "tilt_detection.h"
 
-#include "ADC.h"
-#include "temperature.h"
-#include "timer.h"
+//#include "ADC.h"
+//#include "temperature.h"
+//#include "timer.h"
+
+#define TILT_SIGNAL (uint32_t)1
+
+	// ID for thread
+	osThreadId GetTilt_thread;
+//osThreadId GetTemp_thread;
 
 // kalman state for temperature
-kalman_state kstate = {0.0025, 5.0, 1100.0, 0.0, 0.0};
+//kalman_state kstate = {0.0025, 5.0, 1100.0, 0.0, 0.0};
 
 // kalman state for accelerometer
 kalman_state kstate_X = {0.025, 5, 0, 0, 0};
 kalman_state kstate_Y = {0.025, 5, 0, 0, 0};
 kalman_state kstate_Z = {0.025, 5, 0, 0, 0};
 
-void Blinky_GPIO_Init(void){
-	GPIO_InitTypeDef GPIO_InitStructure;
-	
-	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOD, ENABLE);
-
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_12 | GPIO_Pin_13| GPIO_Pin_14| GPIO_Pin_15;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
-  GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_100MHz;
-  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
-  GPIO_Init(GPIOD, &GPIO_InitStructure);
-	
-}
-
-void Blinky(void const *argument){
-	while(1){
-		GPIO_ToggleBits(GPIOD, GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15);
-		printf("hello world\n");
-		osDelay(250);
-	}
-}
-
-void GetTemp(void const *argument) {
+/*void GetTemp(void const *argument) {
 	while (1) {
 		if (getTimInt()) {
-			 setTimInt(0);				//Reset tick
+			setTimInt(0);				//Reset tick
 			float f_output;
 			
 			// Get Temerature and Filtering
-			if (Kalmanfilter_C(getTemp(), &f_output, &kstate) != 0) {
-				continue;
-			}
+			Kalmanfilter_C((float)getTemp(), &f_output, &kstate);
+
 			printf("filtered: %f\n", f_output);
 			// Convert to temperature
 			float temp_C = voltage2temp(f_output);
 			printf("temp: %f\n", temp_C);
 		}
+		//osDelay(20);
 	}
-}
+}*/
 
 void GetTilt(void const *argument) {
 	while (1) {
-
-		if (getITStatus()) {
-				setITStatus(0);
+		osEvent evt = osSignalWait (TILT_SIGNAL, osWaitForever);
+    if (evt.status == osEventSignal)  {
+        osSignalClear (GetTilt_thread, TILT_SIGNAL);
 
 				int32_t xyz[3]; // get the acc data
 				LIS302DL_ReadACC(xyz);
-				//printf("%i, %i, %i\n", xyz[0], xyz[1], xyz[2]);
-				
+				printf("%i, %i, %i\n", xyz[0], xyz[1], xyz[2]);
+
 				float xyz_float[3];
 
 				normalize(xyz, xyz_float); // normalize the data
@@ -88,13 +74,13 @@ void GetTilt(void const *argument) {
 				printf("tilt: %f\n", tilt);
 
 		}
-		osDelay(250);
+		
+		//osDelay(10);
 	}
 }
 
-
-osThreadDef(Blinky, osPriorityNormal, 1, 0);
 osThreadDef(GetTilt, osPriorityNormal, 1, 0);
+//osThreadDef(GetTemp, osPriorityNormal, 1, 0);
 
 /*
  * main: initialize and start the system
@@ -102,13 +88,11 @@ osThreadDef(GetTilt, osPriorityNormal, 1, 0);
 int main (void) {
   osKernelInitialize ();                    // initialize CMSIS-RTOS
 	
-	// ID for thread
-	osThreadId	Blinky_thread;
-	osThreadId GetTilt_thread;
+//	// ID for thread
+//	osThreadId GetTilt_thread;
+//	osThreadId GetTemp_thread;
 	
   // initialize peripherals here
-	Blinky_GPIO_Init();
-
 	Accel_InitConfig(LIS302DL_LOWPOWERMODE_ACTIVE, // power on the mems sensor
 									 LIS302DL_DATARATE_100, // Data rate at 100 Hz as specified
 									 LIS302DL_X_ENABLE | LIS302DL_Y_ENABLE | LIS302DL_Z_ENABLE,  // Enable all the axes
@@ -119,16 +103,37 @@ int main (void) {
 																							// when enabled, will generate a defined actuation force
 																							// if output signal is within defined parameters, then the sensor is working
 	
-	InitInterrupt(LIS302DL_SPI_INT1_PIN, LIS302DL_SPI_INT1_GPIO_PORT, EXTI_PortSourceGPIOE, EXTI_PinSource0, EXTI_Line0, EXTI0_IRQn, 0x01, 0x01);
-	
-	EXTI_GenerateSWInterrupt(EXTI_Line0); // generate an interrupt to initialize the sampling process
+	InitInterrupt(LIS302DL_SPI_INT1_PIN,
+								LIS302DL_SPI_INT1_GPIO_PORT,
+								EXTI_PortSourceGPIOE,
+								EXTI_PinSource0,
+								EXTI_Line0,
+								EXTI0_IRQn,
+								0x01, 0x02);
+
+//	Timer_config(	1000,								// prescaler
+//								TIM_CounterMode_Up,
+//							  280, 									// period
+//								TIM_CKD_DIV1, 
+//								0);
+//	EnableTimerInterrupt();
 	
   // create 'thread' functions that start executing,
   // example: tid_name = osThreadCreate (osThread(name), NULL);
-	Blinky_thread = osThreadCreate(osThread(Blinky), NULL);
-	//GetTilt_thread = osThreadCreate(osThread(GetTilt), NULL);
+	GetTilt_thread = osThreadCreate(osThread(GetTilt), NULL);
+	if (GetTilt_thread == NULL) {
+		printf("failed to create\n");
+	}
+	//GetTemp_thread = osThreadCreate(osThread(GetTemp), NULL);
+	
+	EXTI_GenerateSWInterrupt(EXTI_Line0); // generate an interrupt to initialize the sampling process
 	
 	osKernelStart ();                         // start thread execution 
 }
 
-
+void EXTI0_IRQHandler(void) {
+	if (EXTI_GetITStatus(EXTI_Line0) != RESET) {
+		osSignalSet (GetTilt_thread, TILT_SIGNAL);
+		EXTI_ClearITPendingBit(EXTI_Line0);
+	}
+}
