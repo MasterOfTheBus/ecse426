@@ -25,22 +25,27 @@
 // variables to store the tilt and temperature
 float temp_C;
 float tilt;
-int digit;
+int LEDnum;
 
 // flashing count
 uint8_t danger;
 uint16_t dangerCount;
+
+int countUpTo;
+int counter = 0;
 
 //// Mutexes
 //osMutexDef(MutexTemp);
 //osMutexDef(MutexTilt);
 osMutexDef(MutexDisplay);
 osMutexDef(MutexFlash);
+osMutexDef(MutexLED);
 
 //osMutexId tempC_mutex;
 //osMutexId tilt_mutex;
 osMutexId display_mutex;
 osMutexId flash_mutex;
+osMutexId LED_mutex;
 
 // ID for thread
 osThreadId GetTilt_thread;
@@ -76,7 +81,7 @@ void GetTemp(void const *argument) {
 				danger = ((temp_C >= THRESHOLD_TEMP) ? 1 : 0);
 				osMutexRelease(flash_mutex);
 
-				printf("temp: %f\n", temp_C);
+				//printf("temp: %f\n", temp_C);
 			}
 		}
 	}
@@ -102,23 +107,25 @@ void GetTilt(void const *argument) {
 				Kalmanfilter_C(xyz_float[2], &xyz_float[2], &kstate_Z); // Z
 
 				tilt = getTilt(BETA, xyz_float);
-				//setNumDisplay(tilt);
-				printf("tilt: %f\n", tilt);
-
+				//printf("tilt: %f\n", tilt);
 		}
 	}
 }
 
 void ReadKeypad(void const *argument){
-	digit = Keypad_read();				// check keypad
-	if (digit != NO_INPUT) {
-		printf("user input: %i\n", digit);
-	}
+	int digit = Keypad_read();				// check keypad
+//	if (digit != NO_INPUT) {
+//		printf("user input: %i\n", digit);
+//	}
 	
 	if (digit == ENTER) {
 		osMutexWait(display_mutex, osWaitForever);
 		setDisplayMode(getDisplayMode() * (-1));
 		osMutexRelease(display_mutex);
+	} else if (digit <= 4 && digit >= 0) {
+		osMutexWait(LED_mutex, osWaitForever);
+		LEDnum = digit;
+		osMutexRelease(LED_mutex);
 	}
 }
 
@@ -145,10 +152,10 @@ void Display7Segment(void const *argument){
 	osMutexWait(flash_mutex, osWaitForever);
 	if (danger) {
 		dangerCount++;
-		if (dangerCount < 50) {
+		if (dangerCount < 25) {
 			toDisplay = -1;
 		}
-		if (dangerCount > 100) {
+		if (dangerCount > 50) {
 			dangerCount = 0;
 		}
 	}
@@ -158,39 +165,43 @@ void Display7Segment(void const *argument){
 }
 
 void DisplayLED(void const *argument){
-	int countUpTo;
-	int counter = 0;
-	while(1){
-		if (tilt <= 180 ) countUpTo = (int) tilt;
-		else countUpTo = 360-(int) tilt;
+	osMutexWait(display_mutex, osWaitForever);
+	if (getDisplayMode() == TILT_MODE) {
+		if (tilt <= 180 ) countUpTo = ((int) tilt)/10;
+		else countUpTo = (360-(int) tilt)/10;
 
-		
 		if (counter < countUpTo){
 			// Turn LEDs on according to user input
-			if (digit == 1){
+			osMutexWait(LED_mutex, osWaitForever);
+			if (LEDnum == 1){
 				GPIO_SetBits(GPIOD, GPIO_Pin_12);
 				GPIO_ResetBits(GPIOD, GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15);
-			} else if (digit == 2){
+			} else if (LEDnum == 2){
 				GPIO_SetBits(GPIOD, GPIO_Pin_13);
 				GPIO_ResetBits(GPIOD, GPIO_Pin_12 | GPIO_Pin_14 | GPIO_Pin_15);
-			} else if (digit == 3){
+			} else if (LEDnum == 3){
 				GPIO_SetBits(GPIOD, GPIO_Pin_14);
 				GPIO_ResetBits(GPIOD, GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_15);
-			}else if (digit == 4){
+			} else if (LEDnum == 4){
 				GPIO_SetBits(GPIOD, GPIO_Pin_15);
 				GPIO_ResetBits(GPIOD, GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14);
 			}
+			osMutexRelease(LED_mutex);
 			counter ++;
 		} else{
 		// Turn LEDs off based PWM...
 			GPIO_ResetBits(GPIOD, GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15);
-			if (counter == 180) counter=0;
+			if (counter == 18) counter=0;
 			else counter ++;
 		}
+	} else {
+		GPIO_ResetBits(GPIOD, GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15);
 	}
+	osMutexRelease(display_mutex);
 }
-osThreadDef(GetTilt, osPriorityNormal, 1, 1000);
-osThreadDef(GetTemp, osPriorityNormal, 1, 1000);
+
+osThreadDef(GetTilt, osPriorityNormal, 1, 600);
+osThreadDef(GetTemp, osPriorityNormal, 1, 600);
 
 // Timer defs
 osTimerDef(DisplayTimer, Display7Segment);
@@ -213,6 +224,7 @@ int main (void) {
 //	tilt_mutex = osMutexCreate(osMutex(MutexTilt));
 	display_mutex = osMutexCreate(osMutex(MutexDisplay));
 	flash_mutex = osMutexCreate(osMutex(MutexFlash));
+	LED_mutex = osMutexCreate(osMutex(MutexLED));
 	
   // initialize peripherals here
 	
@@ -236,28 +248,28 @@ int main (void) {
   // example: tid_name = osThreadCreate (osThread(name), NULL);
 
 	GetTilt_thread = osThreadCreate(osThread(GetTilt), NULL);
-
 	GetTemp_thread = osThreadCreate(osThread(GetTemp), NULL);
 	
 	// Create the timers
 	display_timer = osTimerCreate(osTimer(DisplayTimer), osTimerPeriodic, NULL);
-	
 	keypad_timer = osTimerCreate(osTimer(KeypadTimer), osTimerPeriodic, NULL);
-	
 	led_timer = osTimerCreate(osTimer(LEDTimer), osTimerPeriodic, NULL);
-	
+
+	// Set the display mode to temperature display
 	setDisplayMode(TEMP_MODE);
-	
+
+	// setup the overheat mode variables
 	danger = 0;
 	dangerCount = 0;
 	
+	LEDnum = 1;
+	
 	EXTI_GenerateSWInterrupt(EXTI_Line0); // generate an interrupt to initialize the sampling process
-	
-	osTimerStart(display_timer, 7); // start timer execution
-	
+
+	// Start the timers
+	osTimerStart(display_timer, 5); // start timer execution
 	osTimerStart(keypad_timer, 20); // start keypad reading
-	
-	osTimerStart(led_timer, 20);	// start LED display
+	osTimerStart(led_timer, 1);	// start LED display
 	
 	osKernelStart ();                         // start thread execution 
 }
