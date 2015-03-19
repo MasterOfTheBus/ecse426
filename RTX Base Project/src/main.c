@@ -25,6 +25,7 @@
 // variables to store the tilt and temperature
 float temp_C;
 float tilt;
+int digit;
 
 //// Mutexes
 //osMutexDef(MutexTemp);
@@ -98,7 +99,7 @@ void GetTilt(void const *argument) {
 }
 
 void ReadKeypad(void const *argument){
-	int digit = Keypad_read();				// check keypad
+	digit = Keypad_read();				// check keypad
 	if (digit != NO_INPUT) {
 		printf("user input: %i\n", digit);
 	}
@@ -143,16 +144,16 @@ void DisplayLED(void const *argument){
 		
 		if (counter < countUpTo){
 			// Turn LEDs on according to user input
-			if (userInput == 1){
+			if (digit == 1){
 				GPIO_SetBits(GPIOD, GPIO_Pin_12);
 				GPIO_ResetBits(GPIOD, GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15);
-			} else if (userInput == 2){
+			} else if (digit == 2){
 				GPIO_SetBits(GPIOD, GPIO_Pin_13);
 				GPIO_ResetBits(GPIOD, GPIO_Pin_12 | GPIO_Pin_14 | GPIO_Pin_15);
-			} else if (userInput == 3){
+			} else if (digit == 3){
 				GPIO_SetBits(GPIOD, GPIO_Pin_14);
 				GPIO_ResetBits(GPIOD, GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_15);
-			}else if (userInput == 4){
+			}else if (digit == 4){
 				GPIO_SetBits(GPIOD, GPIO_Pin_15);
 				GPIO_ResetBits(GPIOD, GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14);
 			}
@@ -167,10 +168,11 @@ void DisplayLED(void const *argument){
 }
 osThreadDef(GetTilt, osPriorityNormal, 1, 1000);
 osThreadDef(GetTemp, osPriorityNormal, 1, 1000);
-osThreadDef (DisplayLED, osPriorityNormal, 1, 0);
+
 // Timer defs
 osTimerDef(DisplayTimer, Display7Segment);
 osTimerDef(KeypadTimer, ReadKeypad);
+osTimerDef(LEDTimer, DisplayLED);
 
 /*
  * main: initialize and start the system
@@ -179,11 +181,12 @@ int main (void) {
   osKernelInitialize ();                    // initialize CMSIS-RTOS
 	
 	// ID for thread
-	osThreadId DisplayLED_thread;
+
 
 	// ID for timer
 	osTimerId display_timer;
 	osTimerId keypad_timer;
+	osTimerId led_timer;
 	
 	// Create the mutexes
 //	tempC_mutex = osMutexCreate(osMutex(MutexTemp));
@@ -222,6 +225,8 @@ int main (void) {
 	
 	keypad_timer = osTimerCreate(osTimer(KeypadTimer), osTimerPeriodic, NULL);
 	
+	led_timer = osTimerCreate(osTimer(LEDTimer), osTimerPeriodic, NULL);
+	
 	setDisplayMode(TEMP_MODE);
 	
 	EXTI_GenerateSWInterrupt(EXTI_Line0); // generate an interrupt to initialize the sampling process
@@ -229,6 +234,8 @@ int main (void) {
 	osTimerStart(display_timer, 7); // start timer execution
 	
 	osTimerStart(keypad_timer, 20); // start keypad reading
+	
+	osTimerStart(led_timer, 20);	// start LED display
 	
 	osKernelStart ();                         // start thread execution 
 }
