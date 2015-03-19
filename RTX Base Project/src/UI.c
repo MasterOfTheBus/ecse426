@@ -10,36 +10,16 @@ int m;
 int decimal;
 int setTime = 160;
 int result = 0;
-int readDigit;
+int readDigit = 1;
 int displayUserInput = 0;
 int keypadWait = 10;
-int count;
-int lastResult;
+int count = 0;
+int lastResult = 99;
+
 
 int correctionCount=0;
 
-void Timer_config(uint16_t Prescaler,
-									uint16_t CounterMode,
-									uint32_t Period,
-									uint16_t ClockDivision,
-									uint8_t RepetitionCounter){
-	//Enable Timer3									
-	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
-										
-	//Timer configuration
-	TIM_TimeBaseInitTypeDef timer_init;
-	timer_init.TIM_Prescaler = Prescaler;
-	timer_init.TIM_CounterMode = CounterMode;
-	timer_init.TIM_Period = Period;
-	timer_init.TIM_ClockDivision = ClockDivision;
-	timer_init.TIM_RepetitionCounter = RepetitionCounter;
-	
-	TIM_TimeBaseInit(TIM3, &timer_init);
-	TIM_Cmd(TIM3, ENABLE);
-	TIM_ITConfig(TIM3, TIM_IT_Update, ENABLE); // enable interrupt
-										
-	angleDisplay = 1;
-}
+
 
 void setAngleDisplay(int val) {
 	angleDisplay = val;
@@ -49,21 +29,6 @@ int getAngleDisplay(void) {
 	return (angleDisplay);
 }
 
-void setTimIntCount(int val) {
-	TIM3_interrupt_count = val;
-}
-
-int getTimIntCount(void) {
-	return (TIM3_interrupt_count);
-}
-
-void setTimInt(int val) {
-	TIM3_interrupt = val;
-}
-
-int getTimInt(void) {
-	return (TIM3_interrupt);
-}
 
 void setUserInput(int val) {
 	userInput = val;
@@ -71,6 +36,14 @@ void setUserInput(int val) {
 
 int getUserInput(void) {
 	return (userInput);
+}
+
+void setReadStatus(int val) {
+	readStatus = val;
+}
+
+int getReadStatus(void) {
+	return (readStatus);
 }
 
 void setNumDisplay(float val) {
@@ -81,26 +54,9 @@ float getNumDisplay(void) {
 	return numDisplay;
 }
 	
-void EnableTimerInterrupt(){
-	TIM3_interrupt_count = 0;
-	TIM3_interrupt = 0;
-	
-	NVIC_InitTypeDef nvic_init;
-	nvic_init.NVIC_IRQChannel = TIM3_IRQn;
-	nvic_init.NVIC_IRQChannelPreemptionPriority = 0x02;
-	nvic_init.NVIC_IRQChannelSubPriority = 0x02;
-	nvic_init.NVIC_IRQChannelCmd = ENABLE;
-	NVIC_Init(&nvic_init);
-}
 
 
-void TIM3_IRQHandler(){
-	if (TIM_GetITStatus(TIM3, TIM_IT_Update) != RESET){
-		TIM3_interrupt = 1;
 
-		TIM_ClearITPendingBit(TIM3, TIM_IT_Update);
-	}
-}
 
 
 
@@ -561,63 +517,47 @@ void Keypad_readDigit(){
 
 
 void Keypad_read(){
-	while (result == 22 || result == 99) {
-		Keypad_readDigit();
-		TIM3_interrupt_count=0;
+	Keypad_readDigit();
+	if (result == lastResult){	// Key not released
+															// Do nothing...
 	}
-	userInput = 0;
-	lastResult = 99;
-	count = 0;
-	readDigit = 1;
-	while (result != 22 || result != 21){
-		Keypad_readDigit();
-		TIM3_interrupt_count++;					// using interrpt count as a counter to display user input
-		if (TIM3_interrupt_count > 3) {
-			TIM3_interrupt_count = 0;
-		}
-		Display((float)userInput);			// display user input
-		if (result != lastResult && result < 10 && count > 5){
-						
-				if (readDigit == 1){
-					userInput = userInput + result*100;
-				} else if (readDigit == 2){
-					userInput = userInput + result*10;
-				} else if (readDigit == 3) {
-					userInput = userInput + result;
-				} else {
-					// ignore after 4 digits...
-				}	
-			count = 0;
-			readDigit++;
-		} 
-		
-		else if (result == 99){
-			count++;
-		}
-		
-		else if (result == 21){
-			userInput=500;
-		}
-				
-		else if (result == 22 ){
-			break;
-		}
-		lastResult = result;	
-
+	else if (result == 99){		// no signal detected --- NO_INPUT 
+		count++;								// counter for bouncing
 	}
-			// Scale back!
-			if (readDigit == 2){
-				userInput = userInput/100;
-			} else if (readDigit == 3){
-				userInput = userInput/10;
-			} 
-			// done reading from user input
-			configInit_GPIO(GPIOD, RCC_AHB1Periph_GPIOC,
-										GPIO_Pin_13,
-										GPIO_Mode_OUT, GPIO_Speed_100MHz, GPIO_OType_PP,
-										GPIO_PuPd_DOWN);
+	else if(result < 5 && count > 5){ // Handling key bouncing 
+		if (readStatus != 0){
+			readStatus = 0;
+			userInput = result;			// Update userInput
+//			userInput = 0;								//	Reset userInput
+//			readDigit = 1;								// Reset for next reading
+		}
+//		if (readDigit == 1){
+//					userInput = userInput + result*100;
+//				} else if (readDigit == 2){
+//					userInput = userInput + result*10;
+//				} else if (readDigit == 3) {
+//					userInput = userInput + result;
+//				} else {
+//					// ignore after 4 digits...
+//				}	
+//		readDigit++;
+		count = 0; // Reset counter 
+	} 
+//	else if (result == 22){		// User pressed ENTER, scale back
+//		if (readDigit == 2){		
+//				userInput = userInput/100;
+//			} else if (readDigit == 3){
+//				userInput = userInput/10;
+//			} 
+//		readStatus = 1;					// Signal data ready
+//	}
+//	else if (result == 21){		// User pressed *
+//		readStatus = 2;					// Signal *
+//	}
 
-			return;
+	
+	
+	lastResult = result; // keep history
 }
 
 void correctionOutput(int8_t upDown) {

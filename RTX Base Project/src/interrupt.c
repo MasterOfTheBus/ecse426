@@ -1,4 +1,5 @@
 #include "interrupt.h"
+//#include "thread.h"
 
 void setITStatus(int set) {
 	interrupt = set;
@@ -48,9 +49,11 @@ void InitInterrupt(uint32_t GPIO_pin,
 	NVIC_Init(&nvic_init);	
 }
 
-void EXTI0_IRQHandler(void) {
+/*void EXTI0_IRQHandler(void) {
 	if (EXTI_GetITStatus(exti_line) != RESET) {
 		interrupt = 1;
+		//osSignalSet (GetTilt_thread, 0x00000001);
 		EXTI_ClearITPendingBit(exti_line);
 	}
 }
+*/

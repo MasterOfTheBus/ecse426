@@ -24,6 +24,8 @@
 	osThreadId GetTilt_thread;
 //osThreadId GetTemp_thread;
 
+#include "UI.h"
+
 // kalman state for temperature
 //kalman_state kstate = {0.0025, 5.0, 1100.0, 0.0, 0.0};
 
@@ -82,6 +84,21 @@ void GetTilt(void const *argument) {
 osThreadDef(GetTilt, osPriorityNormal, 1, 0);
 //osThreadDef(GetTemp, osPriorityNormal, 1, 0);
 
+void ReadKeypad(void const *argument){
+	while(1){
+		Keypad_read();				// check keypad
+		osDelay(100);					
+	}
+}
+
+void Display7Segment(void const *argument){
+	while(1){
+	//	Display();
+	}
+}
+
+osThreadDef (ReadKeypad, osPriorityNormal, 1, 0);
+
 /*
  * main: initialize and start the system
  */
@@ -91,6 +108,7 @@ int main (void) {
 //	// ID for thread
 //	osThreadId GetTilt_thread;
 //	osThreadId GetTemp_thread;
+	osThreadId ReadKeypad_thread;
 	
   // initialize peripherals here
 	Accel_InitConfig(LIS302DL_LOWPOWERMODE_ACTIVE, // power on the mems sensor
@@ -127,6 +145,8 @@ int main (void) {
 	//GetTemp_thread = osThreadCreate(osThread(GetTemp), NULL);
 	
 	EXTI_GenerateSWInterrupt(EXTI_Line0); // generate an interrupt to initialize the sampling process
+	
+	ReadKeypad_thread = osThreadCreate(osThread(ReadKeypad), NULL);
 	
 	osKernelStart ();                         // start thread execution 
 }

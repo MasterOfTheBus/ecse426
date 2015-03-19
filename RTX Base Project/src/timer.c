@@ -32,6 +32,7 @@ void EnableTimerInterrupt(){
 	NVIC_Init(&nvic_init);
 }
 
+
 void setTimInt(int val) {
 	TIM3_interrupt = val;
 }
