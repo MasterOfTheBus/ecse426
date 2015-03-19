@@ -149,10 +149,9 @@ void DisplayLED(void const *argument){
 		
 	
 }
-osThreadDef(GetTilt, osPriorityNormal, 1, 0);
-osThreadDef(GetTemp, osPriorityNormal, 1, 0);
+osThreadDef(GetTilt, osPriorityNormal, 1, 1000);
+osThreadDef(GetTemp, osPriorityNormal, 1, 1000);
 osThreadDef (ReadKeypad, osPriorityNormal, 1, 0);
-osThreadDef (Display7Segment, osPriorityNormal, 1, 0);
 osThreadDef (DisplayLED, osPriorityNormal, 1, 0);
 // Timer defs
 osTimerDef(DisplayTimer, Display7Segment);
@@ -165,7 +164,6 @@ int main (void) {
 	
 	// ID for thread
 	osThreadId ReadKeypad_thread;
-	osThreadId Display7Segment_thread;
 	osThreadId DisplayLED_thread;
 
 	// ID for timer
@@ -202,9 +200,7 @@ int main (void) {
 	
 	ReadKeypad_thread = osThreadCreate(osThread(ReadKeypad), NULL);
 	
-	Display7Segment_thread = osThreadCreate(osThread(Display7Segment), NULL);
-	
-	DisplayLED_thread = osThreadCreate(osThread(DisplayLED), NULL);
+	//DisplayLED_thread = osThreadCreate(osThread(DisplayLED), NULL);
 	
 	// Create the timers
 	display_timer = osTimerCreate(osTimer(DisplayTimer), osTimerPeriodic, NULL);
@@ -213,7 +209,7 @@ int main (void) {
 	
 	EXTI_GenerateSWInterrupt(EXTI_Line0); // generate an interrupt to initialize the sampling process
 	printf("main\n");
-	osTimerStart(display_timer, 10); // start timer execution
+	osTimerStart(display_timer, 7); // start timer execution
 	
 	osKernelStart ();                         // start thread execution 
 }

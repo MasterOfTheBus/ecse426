@@ -71,14 +71,14 @@
 //   <i> Defines the number of threads with user-provided stack size.
 //   <i> Default: 0
 #ifndef OS_PRIVCNT
- #define OS_PRIVCNT     0
+ #define OS_PRIVCNT     2
 #endif
  
 //   <o>Total stack size [bytes] for threads with user-provided stack size <0-1048576:8><#/4>
 //   <i> Defines the combined stack size for threads with user-provided stack size.
 //   <i> Default: 0
 #ifndef OS_PRIVSTKSIZE
- #define OS_PRIVSTKSIZE 0
+ #define OS_PRIVSTKSIZE 500
 #endif
  
 //   <q>Check for stack overflow
@@ -167,7 +167,7 @@
 //   <i> Defines stack size for Timer thread.
 //   <i> Default: 200
 #ifndef OS_TIMERSTKSZ
- #define OS_TIMERSTKSZ  50
+ #define OS_TIMERSTKSZ  124
 #endif
  
 //   <o>Timer Callback Queue size <1-32>

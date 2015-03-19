@@ -11,11 +11,6 @@
 #define TILT_MODE (uint8_t)1
 
 /** @var
-		@brief The number that the 7-segment display will display
-	*/
-static float numDisplay;
-
-/** @var
 	@breif 0 for temperature, 1 for tilt
 	*/
 static int displayMode;
@@ -36,23 +31,6 @@ static int userInput;
 						- 2 = * pressed 
 	*/
 static int readStatus;
-
-/** @var
-		@brief The flag indicating whether to display the angle or the correction animation
-		1 for angle, 0 for animation
-	*/
-static int angleDisplay;
-
-/**
-		@brief Toggle whether to display the angle or the correction animation
-		@param val 1 for displaying angles, 0 for displaying correction animation
-	*/
-void setAngleDisplay(int val);
-/**
-		@brief Check flag to determine if displaying angle or correction animation
-		@retval 1 for angle, 0 for correction animation
-	*/
-int getAngleDisplay(void);
 
 /**
 		@brief Set the value of the userInput, @ref userInput
@@ -88,19 +66,6 @@ void setReadStatus(int val);
 		@retval The value of the userInput
 	*/
 int getReadStatus(void);
-
-
-
-/**
-		@brief Set the value of the number to display, @ref numDisplay
-		@param val The value to set the number
-	*/
-void setNumDisplay(float val);
-/**
-		@brief Get the value of the number displayed, @ref numDisplay
-		@retval The value of numDisplay
-	*/
-float getNumDisplay(void);
 
 /**
 		@brief Set the display mode, @ref displayMode

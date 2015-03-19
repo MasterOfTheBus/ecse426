@@ -3,31 +3,17 @@
 #include "stm32f4xx_conf.h"
 #include "UI.h"
 
-int timerValue;	
+//int timerValue;	
 int digits[3] = {0};
-int i;
-int m;
-int decimal;
-int setTime = 160;
+//int setTime = 160;
 int result = 0;
-int readDigit = 1;
-int displayUserInput = 0;
-int keypadWait = 10;
+//int readDigit = 1;
+//int displayUserInput = 0;
+//int keypadWait = 10;
 int count = 0;
 int lastResult = 99;
 
-
 int correctionCount=0;
-
-
-
-void setAngleDisplay(int val) {
-	angleDisplay = val;
-}
-
-int getAngleDisplay(void) {
-	return (angleDisplay);
-}
 
 void setTIM3_count(int val) {
 	TIM3_interrupt_count = val;
@@ -51,14 +37,6 @@ void setReadStatus(int val) {
 
 int getReadStatus(void) {
 	return (readStatus);
-}
-
-void setNumDisplay(float val) {
-	numDisplay = val;
-}
-
-float getNumDisplay(void) {
-	return numDisplay;
 }
 	
 void setDisplayMode(uint8_t val) {
@@ -147,7 +125,8 @@ void Display(float n){
 //		decimal = 0;
 //	}
 //	else{
-		m = (int)n; 			// extract integer part
+		uint8_t decimal;
+		int m = (int)n; 			// extract integer part
 		n = n-(float)(m);		// extract floating point part
 		
 		if (m>=100){
@@ -161,7 +140,7 @@ void Display(float n){
 			m = m* 100 + (int)(n*100);
 		}
 //	}
-
+		uint8_t i;
 		for (i=0; i<3;i++){
 			digits[i] = (int)(m%10);
 			m = (m-(m%10))/10;
@@ -342,13 +321,6 @@ void Nine(){
 	GPIO_WriteBit(GPIOD, GPIO_Pin_10 , Bit_RESET);
 	GPIO_WriteBit(GPIOE, GPIO_Pin_11, Bit_RESET);	
 }	
-	
-
-
-	
-
-
-
 
 void Keypad_readDigit(){
 	
@@ -568,7 +540,7 @@ void Keypad_read(){
 	
 	lastResult = result; // keep history
 }
-
+#if 0
 void correctionOutput(int8_t upDown) {
 	if (upDown == 0) {
 		return;
@@ -611,3 +583,4 @@ void correctionOutput(int8_t upDown) {
 		}
 	}
 }
+#endif
