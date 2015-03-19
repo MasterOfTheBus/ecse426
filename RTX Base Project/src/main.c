@@ -35,14 +35,14 @@ int countUpTo;
 int counter = 0;
 
 //// Mutexes
-//osMutexDef(MutexTemp);
-//osMutexDef(MutexTilt);
+osMutexDef(MutexTemp);
+osMutexDef(MutexTilt);
 osMutexDef(MutexDisplay);
 osMutexDef(MutexFlash);
 osMutexDef(MutexLED);
 
-//osMutexId tempC_mutex;
-//osMutexId tilt_mutex;
+osMutexId tempC_mutex;
+osMutexId tilt_mutex;
 osMutexId display_mutex;
 osMutexId flash_mutex;
 osMutexId LED_mutex;
@@ -75,7 +75,9 @@ void GetTemp(void const *argument) {
 
 				//printf("filtered: %f\n", f_output);
 				// Convert to temperature
+				osMutexWait(tempC_mutex, osWaitForever);
 				temp_C = voltage2temp(f_output);
+				osMutexRelease(tempC_mutex);
 				
 				osMutexWait(flash_mutex, osWaitForever);
 				danger = ((temp_C >= THRESHOLD_TEMP) ? 1 : 0);
@@ -106,7 +108,9 @@ void GetTilt(void const *argument) {
 				Kalmanfilter_C(xyz_float[1], &xyz_float[1], &kstate_Y); // Y
 				Kalmanfilter_C(xyz_float[2], &xyz_float[2], &kstate_Z); // Z
 
+				osMutexWait(tilt_mutex, osWaitForever);
 				tilt = getTilt(BETA, xyz_float);
+				osMutexRelease(tilt_mutex);
 				//printf("tilt: %f\n", tilt);
 		}
 	}
@@ -137,15 +141,15 @@ void Display7Segment(void const *argument){
 	}
 
 	float toDisplay = 0;
-	osStatus status = osMutexWait(display_mutex, osWaitForever);
+	osMutexWait(display_mutex, osWaitForever);
 	if (getDisplayMode() == TEMP_MODE) {
-		//status = osMutexWait(tempC_mutex, osWaitForever);
+		osMutexWait(tempC_mutex, osWaitForever);
 		toDisplay = temp_C;
-		//osMutexRelease(tempC_mutex);
+		osMutexRelease(tempC_mutex);
 	} else if (getDisplayMode() == TILT_MODE) {
-		//status = osMutexWait(tempC_mutex, osWaitForever);
+		osMutexWait(tempC_mutex, osWaitForever);
 		toDisplay = tilt;
-		//osMutexRelease(tilt_mutex);
+		osMutexRelease(tilt_mutex);
 	}
 	osMutexRelease(display_mutex);
 
@@ -200,7 +204,7 @@ void DisplayLED(void const *argument){
 	osMutexRelease(display_mutex);
 }
 
-osThreadDef(GetTilt, osPriorityNormal, 1, 600);
+osThreadDef(GetTilt, osPriorityAboveNormal, 1, 600);
 osThreadDef(GetTemp, osPriorityNormal, 1, 600);
 
 // Timer defs
@@ -220,8 +224,8 @@ int main (void) {
 	osTimerId led_timer;
 	
 	// Create the mutexes
-//	tempC_mutex = osMutexCreate(osMutex(MutexTemp));
-//	tilt_mutex = osMutexCreate(osMutex(MutexTilt));
+	tempC_mutex = osMutexCreate(osMutex(MutexTemp));
+	tilt_mutex = osMutexCreate(osMutex(MutexTilt));
 	display_mutex = osMutexCreate(osMutex(MutexDisplay));
 	flash_mutex = osMutexCreate(osMutex(MutexFlash));
 	LED_mutex = osMutexCreate(osMutex(MutexLED));
