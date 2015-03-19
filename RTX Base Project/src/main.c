@@ -131,20 +131,34 @@ void Display7Segment(void const *argument){
 }
 
 void DisplayLED(void const *argument){
+	int countUpTo;
+	int counter = 0;
 	while(1){
-		// Turn LEDs on according to user input
-		if (userInput == 1){
-			GPIO_SetBits(GPIOD, GPIO_Pin_12);
-		} else if (userInput == 2){
-			GPIO_SetBits(GPIOD, GPIO_Pin_13);
-		} else if (userInput == 3){
-			GPIO_SetBits(GPIOD, GPIO_Pin_14);
-		}else if (userInput == 4){
-			GPIO_SetBits(GPIOD, GPIO_Pin_15);
-		}
+		if (tilt <= 180 ) countUpTo = (int) tilt;
+		else countUpTo = 360-(int) tilt;
 		
+		if (counter < countUpTo){
+			// Turn LEDs on according to user input
+			if (userInput == 1){
+				GPIO_SetBits(GPIOD, GPIO_Pin_12);
+				GPIO_ResetBits(GPIOD, GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15);
+			} else if (userInput == 2){
+				GPIO_SetBits(GPIOD, GPIO_Pin_13);
+				GPIO_ResetBits(GPIOD, GPIO_Pin_12 | GPIO_Pin_14 | GPIO_Pin_15);
+			} else if (userInput == 3){
+				GPIO_SetBits(GPIOD, GPIO_Pin_14);
+				GPIO_ResetBits(GPIOD, GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_15);
+			}else if (userInput == 4){
+				GPIO_SetBits(GPIOD, GPIO_Pin_15);
+				GPIO_ResetBits(GPIOD, GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14);
+			}
+			counter ++;
+		} else{
 		// Turn LEDs off based PWM...
-	
+			GPIO_ResetBits(GPIOD, GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15);
+			if (counter == 180) counter=0;
+			else counter ++;
+		}
 	}
 		
 	
