@@ -130,10 +130,30 @@ void Display7Segment(void const *argument){
 	//}
 }
 
+void DisplayLED(void const *argument){
+	while(1){
+		// Turn LEDs on according to user input
+		if (userInput == 1){
+			GPIO_SetBits(GPIOD, GPIO_Pin_12);
+		} else if (userInput == 2){
+			GPIO_SetBits(GPIOD, GPIO_Pin_13);
+		} else if (userInput == 3){
+			GPIO_SetBits(GPIOD, GPIO_Pin_14);
+		}else if (userInput == 4){
+			GPIO_SetBits(GPIOD, GPIO_Pin_15);
+		}
+		
+		// Turn LEDs off based PWM...
+	
+	}
+		
+	
+}
 osThreadDef(GetTilt, osPriorityNormal, 1, 0);
 osThreadDef(GetTemp, osPriorityNormal, 1, 0);
 osThreadDef (ReadKeypad, osPriorityNormal, 1, 0);
-
+osThreadDef (Display7Segment, osPriorityNormal, 1, 0);
+osThreadDef (DisplayLED, osPriorityNormal, 1, 0);
 // Timer defs
 osTimerDef(DisplayTimer, Display7Segment);
 
@@ -145,7 +165,9 @@ int main (void) {
 	
 	// ID for thread
 	osThreadId ReadKeypad_thread;
-	
+	osThreadId Display7Segment_thread;
+	osThreadId DisplayLED_thread;
+
 	// ID for timer
 	osTimerId display_timer;
 	
@@ -179,6 +201,10 @@ int main (void) {
 	GetTemp_thread = osThreadCreate(osThread(GetTemp), NULL);
 	
 	ReadKeypad_thread = osThreadCreate(osThread(ReadKeypad), NULL);
+	
+	Display7Segment_thread = osThreadCreate(osThread(Display7Segment), NULL);
+	
+	DisplayLED_thread = osThreadCreate(osThread(DisplayLED), NULL);
 	
 	// Create the timers
 	display_timer = osTimerCreate(osTimer(DisplayTimer), osTimerPeriodic, NULL);
