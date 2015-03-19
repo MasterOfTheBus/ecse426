@@ -29,11 +29,11 @@ float tilt;
 //// Mutexes
 //osMutexDef(MutexTemp);
 //osMutexDef(MutexTilt);
-//osMutexDef(MutexDisplay);
+osMutexDef(MutexDisplay);
 
 //osMutexId tempC_mutex;
 //osMutexId tilt_mutex;
-//osMutexId display_mutex;
+osMutexId display_mutex;
 
 // ID for thread
 osThreadId GetTilt_thread;
@@ -98,23 +98,26 @@ void GetTilt(void const *argument) {
 }
 
 void ReadKeypad(void const *argument){
-	while(1){
-		Keypad_read();				// check keypad
-		osDelay(100);					
+	int digit = Keypad_read();				// check keypad
+	if (digit != NO_INPUT) {
+		printf("user input: %i\n", digit);
+	}
+	
+	if (digit == ENTER) {
+		osMutexWait(display_mutex, osWaitForever);
+		setDisplayMode(getDisplayMode() * (-1));
+		osMutexRelease(display_mutex);
 	}
 }
 
 void Display7Segment(void const *argument){
-	//while(1){
-		printf("display\n");
 		if(getTIM3_count() == 3) {
 			setTIM3_count(0);
 		} else {
 			setTIM3_count(getTIM3_count()+1);
 		}
 		float toDisplay = 0;
-		osStatus status;
-		//osStatus status = osMutexWait(display_mutex, osWaitForever);
+		osStatus status = osMutexWait(display_mutex, osWaitForever);
 		if (getDisplayMode() == TEMP_MODE) {
 			//osMutexRelease(display_mutex);
 			//status = osMutexWait(tempC_mutex, osWaitForever);
@@ -126,14 +129,14 @@ void Display7Segment(void const *argument){
 			toDisplay = tilt;
 			//osMutexRelease(tilt_mutex);
 		}
+		osMutexRelease(display_mutex);
 		Display(toDisplay);
-	//}
 }
 
 void DisplayLED(void const *argument){
 	while(1){
 		// Turn LEDs on according to user input
-		if (userInput == 1){
+/*		if (userInput == 1){
 			GPIO_SetBits(GPIOD, GPIO_Pin_12);
 		} else if (userInput == 2){
 			GPIO_SetBits(GPIOD, GPIO_Pin_13);
@@ -141,20 +144,18 @@ void DisplayLED(void const *argument){
 			GPIO_SetBits(GPIOD, GPIO_Pin_14);
 		}else if (userInput == 4){
 			GPIO_SetBits(GPIOD, GPIO_Pin_15);
-		}
+		}*/
 		
 		// Turn LEDs off based PWM...
 	
 	}
-		
-	
 }
 osThreadDef(GetTilt, osPriorityNormal, 1, 1000);
 osThreadDef(GetTemp, osPriorityNormal, 1, 1000);
-osThreadDef (ReadKeypad, osPriorityNormal, 1, 0);
 osThreadDef (DisplayLED, osPriorityNormal, 1, 0);
 // Timer defs
 osTimerDef(DisplayTimer, Display7Segment);
+osTimerDef(KeypadTimer, ReadKeypad);
 
 /*
  * main: initialize and start the system
@@ -163,11 +164,11 @@ int main (void) {
   osKernelInitialize ();                    // initialize CMSIS-RTOS
 	
 	// ID for thread
-	osThreadId ReadKeypad_thread;
 	osThreadId DisplayLED_thread;
 
 	// ID for timer
 	osTimerId display_timer;
+	osTimerId keypad_timer;
 	
 	// Create the mutexes
 //	tempC_mutex = osMutexCreate(osMutex(MutexTemp));
@@ -194,22 +195,25 @@ int main (void) {
 	
   // create 'thread' functions that start executing,
   // example: tid_name = osThreadCreate (osThread(name), NULL);
+
 	GetTilt_thread = osThreadCreate(osThread(GetTilt), NULL);
 
 	GetTemp_thread = osThreadCreate(osThread(GetTemp), NULL);
-	
-	ReadKeypad_thread = osThreadCreate(osThread(ReadKeypad), NULL);
 	
 	//DisplayLED_thread = osThreadCreate(osThread(DisplayLED), NULL);
 	
 	// Create the timers
 	display_timer = osTimerCreate(osTimer(DisplayTimer), osTimerPeriodic, NULL);
 	
-	setDisplayMode(TILT_MODE);
+	keypad_timer = osTimerCreate(osTimer(KeypadTimer), osTimerPeriodic, NULL);
+	
+	setDisplayMode(TEMP_MODE);
 	
 	EXTI_GenerateSWInterrupt(EXTI_Line0); // generate an interrupt to initialize the sampling process
-	printf("main\n");
+	
 	osTimerStart(display_timer, 7); // start timer execution
+	
+	osTimerStart(keypad_timer, 20); // start keypad reading
 	
 	osKernelStart ();                         // start thread execution 
 }

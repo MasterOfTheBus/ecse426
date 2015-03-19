@@ -23,14 +23,6 @@ int getTIM3_count(void) {
 	return (TIM3_interrupt_count);
 }
 
-void setUserInput(int val) {
-	userInput = val;
-}
-
-int getUserInput(void) {
-	return (userInput);
-}
-
 void setReadStatus(int val) {
 	readStatus = val;
 }
@@ -39,11 +31,11 @@ int getReadStatus(void) {
 	return (readStatus);
 }
 	
-void setDisplayMode(uint8_t val) {
+void setDisplayMode(int8_t val) {
 	displayMode = val;
 }
 
-uint8_t getDisplayMode(void) {
+int8_t getDisplayMode(void) {
 	return displayMode;
 }
 
@@ -322,7 +314,7 @@ void Nine(){
 	GPIO_WriteBit(GPIOE, GPIO_Pin_11, Bit_RESET);	
 }	
 
-void Keypad_readDigit(){
+int Keypad_readDigit(){
 	
 	configInit_GPIO(GPIOE, RCC_AHB1Periph_GPIOE,
 										GPIO_Pin_4 | GPIO_Pin_5 | GPIO_Pin_6,
@@ -349,7 +341,7 @@ void Keypad_readDigit(){
 										
 	if (GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_4)== Bit_RESET && GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_5) == Bit_RESET && GPIO_ReadInputDataBit(GPIOD, GPIO_Pin_1) == Bit_RESET &&	GPIO_ReadInputDataBit(GPIOD, GPIO_Pin_2) == Bit_RESET){
 		// Nothing is pressed
-		result = 99;
+		result = NO_INPUT;
 	} 
 	
 	else{
@@ -381,7 +373,7 @@ void Keypad_readDigit(){
 				result = 3;
 			}
 			else if (GPIO_ReadInputDataBit(GPIOE, GPIO_Pin_5) == Bit_SET){
-				result = 10; // A
+				result = A_KEY; // A
 			}
 			else if (GPIO_ReadInputDataBit(GPIOC, GPIO_Pin_13) == Bit_SET){
 				result = 2;
@@ -415,7 +407,7 @@ void Keypad_readDigit(){
 				result = 6;
 			}
 			else if (GPIO_ReadInputDataBit(GPIOE, GPIO_Pin_5) == Bit_SET){
-				result = 11; // B
+				result = B_KEY; // B
 			}
 			else if (GPIO_ReadInputDataBit(GPIOC, GPIO_Pin_13) == Bit_SET){
 				result = 5;
@@ -450,7 +442,7 @@ void Keypad_readDigit(){
 				result = 9;
 			}
 			else if (GPIO_ReadInputDataBit(GPIOE, GPIO_Pin_5) == Bit_SET){
-				result = 12; // C
+				result = C_KEY; // C
 			}
 			else if (GPIO_ReadInputDataBit(GPIOC, GPIO_Pin_13) == Bit_SET){
 				result = 8;
@@ -478,13 +470,13 @@ void Keypad_readDigit(){
 											GPIO_Mode_IN, GPIO_Speed_100MHz, GPIO_OType_PP,
 											GPIO_PuPd_DOWN);
 			if (GPIO_ReadInputDataBit(GPIOE, GPIO_Pin_6) == Bit_SET){
-				result = 21; // Calibrate
+				result = STAR; // Calibrate
 			}
 			else if (GPIO_ReadInputDataBit(GPIOE, GPIO_Pin_4) == Bit_SET){
-				result = 22; // ENTER
+				result = ENTER; // ENTER
 			}
 			else if (GPIO_ReadInputDataBit(GPIOE, GPIO_Pin_5) == Bit_SET){
-				result = 13; // D
+				result = D_KEY; // D
 			}
 			else if (GPIO_ReadInputDataBit(GPIOC, GPIO_Pin_13) == Bit_SET){
 				result = 0;
@@ -492,53 +484,22 @@ void Keypad_readDigit(){
 			
 		}
 	}
-	
+	return result;
 }
 
-
-
-void Keypad_read(){
+int Keypad_read(){
 	Keypad_readDigit();
+	int userInput = NO_INPUT;
 	if (result == lastResult){	// Key not released
-															// Do nothing...
-	}
-	else if (result == 99){		// no signal detected --- NO_INPUT 
-		count++;								// counter for bouncing
-	}
-	else if(result < 5 && count > 5){ // Handling key bouncing 
-		if (readStatus != 0){
-			readStatus = 0;
+		return userInput;													// Do nothing...
+	}	else if (result == NO_INPUT){		// no signal detected --- NO_INPUT 
+		//count++;								// counter for bouncing
+	}	else if(result <= ENTER){ // Handling key bouncing 
 			userInput = result;			// Update userInput
-//			userInput = 0;								//	Reset userInput
-//			readDigit = 1;								// Reset for next reading
-		}
-//		if (readDigit == 1){
-//					userInput = userInput + result*100;
-//				} else if (readDigit == 2){
-//					userInput = userInput + result*10;
-//				} else if (readDigit == 3) {
-//					userInput = userInput + result;
-//				} else {
-//					// ignore after 4 digits...
-//				}	
-//		readDigit++;
-		count = 0; // Reset counter 
+			count = 0; // Reset counter 
 	} 
-//	else if (result == 22){		// User pressed ENTER, scale back
-//		if (readDigit == 2){		
-//				userInput = userInput/100;
-//			} else if (readDigit == 3){
-//				userInput = userInput/10;
-//			} 
-//		readStatus = 1;					// Signal data ready
-//	}
-//	else if (result == 21){		// User pressed *
-//		readStatus = 2;					// Signal *
-//	}
-
-	
-	
 	lastResult = result; // keep history
+	return userInput;
 }
 #if 0
 void correctionOutput(int8_t upDown) {

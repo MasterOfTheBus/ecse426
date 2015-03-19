@@ -7,8 +7,18 @@
 #include "stm32f4xx_conf.h"
 #include "stm32f4xx_tim.h"
 
-#define TEMP_MODE (uint8_t)0
-#define TILT_MODE (uint8_t)1
+// define the display mode
+#define TEMP_MODE (int8_t)(-1)
+#define TILT_MODE (int8_t)1
+
+// special key defs
+#define NO_INPUT 99
+#define ENTER 22
+#define STAR 21
+#define D_KEY 13
+#define C_KEY 12
+#define B_KEY 11
+#define A_KEY 10
 
 /** @var
 	@breif 0 for temperature, 1 for tilt
@@ -21,28 +31,12 @@ static int displayMode;
 static int TIM3_interrupt_count;
 
 /** @var
-		@brief The value of the user input
-	*/
-static int userInput;
-/** @var
 		@brief Signal 
 						- 0 = still waiting for user input
 						- 1 = done reading -- ENTER presse
 						- 2 = * pressed 
 	*/
 static int readStatus;
-
-/**
-		@brief Set the value of the userInput, @ref userInput
-		Only sets the value of the variable. Use @ref Keypad_read to get user input from keypad
-		@param val The value to set the userInput
-	*/
-void setUserInput(int val);
-/**
-		@brief Get the value of the userInput, @ref userInput
-		@retval The value of the userInput
-	*/
-int getUserInput(void);
 
 /**
 		@brief Which digit to display
@@ -71,12 +65,12 @@ int getReadStatus(void);
 		@brief Set the display mode, @ref displayMode
 		@param val The display mode
 	*/
-void setDisplayMode(uint8_t val);
+void setDisplayMode(int8_t val);
 /**
 		@brief Get the display mode, @ref displayMode
 		@retval The value of the display mode
 	*/
-uint8_t getDisplayMode(void);
+int8_t getDisplayMode(void);
 
 /**
 	*	@brief Display using 7-segment display
@@ -126,7 +120,7 @@ void Nine(void);
 	*				idle --- value = 99 --- Result when nothing is pressed
 	*	
 	*/
-void Keypad_readDigit(void);
+int Keypad_readDigit(void);
 
 /**
 	*	@brief Assembling user input
@@ -145,7 +139,7 @@ void Keypad_readDigit(void);
 	*				idle --- value = 99 --- Result when nothing is pressed --- Continue waiting for input
 	*	
 	*/
-void Keypad_read(void);
+int Keypad_read(void);
 
 /**
 	*	@brief Configure GPIO for 7-segment display
