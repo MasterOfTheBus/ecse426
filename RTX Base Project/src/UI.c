@@ -29,6 +29,13 @@ int getAngleDisplay(void) {
 	return (angleDisplay);
 }
 
+void setTIM3_count(int val) {
+	TIM3_interrupt_count = val;
+}
+
+int getTIM3_count(void) {
+	return (TIM3_interrupt_count);
+}
 
 void setUserInput(int val) {
 	userInput = val;
@@ -54,12 +61,13 @@ float getNumDisplay(void) {
 	return numDisplay;
 }
 	
+void setDisplayMode(uint8_t val) {
+	displayMode = val;
+}
 
-
-
-
-
-
+uint8_t getDisplayMode(void) {
+	return displayMode;
+}
 
 void configInit_GPIO(GPIO_TypeDef* GPIOx,
 										 uint32_t periph_GPIOx,
@@ -106,6 +114,7 @@ void GPIO_config(){
 									GPIO_Mode_OUT, GPIO_Speed_100MHz, GPIO_OType_PP,
 									GPIO_PuPd_DOWN);
 
+	TIM3_interrupt_count = 0;
 }
 
 // Display helper method to select the digit to display

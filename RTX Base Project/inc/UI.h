@@ -7,10 +7,19 @@
 #include "stm32f4xx_conf.h"
 #include "stm32f4xx_tim.h"
 
+#define TEMP_MODE (uint8_t)0
+#define TILT_MODE (uint8_t)1
+
 /** @var
 		@brief The number that the 7-segment display will display
 	*/
 static float numDisplay;
+
+/** @var
+	@breif 0 for temperature, 1 for tilt
+	*/
+static int displayMode;
+
 /** @var
 		@brief A counter used to increment the digit display
 	*/
@@ -57,6 +66,16 @@ void setUserInput(int val);
 	*/
 int getUserInput(void);
 
+/**
+		@brief Which digit to display
+		@param val 0 to 3 for the 4 7-seg displays
+	*/
+void setTIM3_count(int val);
+/**
+		@brief Get which digit is currently displaying
+		@retval int 0 to 3 for the 4 7-seg displays
+	*/
+int getTIM3_count(void);
 
 /**
 		@brief Set the value of the userInput, @ref userInput
@@ -82,6 +101,17 @@ void setNumDisplay(float val);
 		@retval The value of numDisplay
 	*/
 float getNumDisplay(void);
+
+/**
+		@brief Set the display mode, @ref displayMode
+		@param val The display mode
+	*/
+void setDisplayMode(uint8_t val);
+/**
+		@brief Get the display mode, @ref displayMode
+		@retval The value of the display mode
+	*/
+uint8_t getDisplayMode(void);
 
 /**
 	*	@brief Display using 7-segment display

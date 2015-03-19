@@ -22,10 +22,22 @@
 #define TEMPERATURE_SIGNAL (uint32_t)2
 #define EOC_SIGNAL (uint32_t)4
 
-	// ID for thread
-	osThreadId GetTilt_thread;
-	osThreadId GetTemp_thread;
+// variables to store the tilt and temperature
+float temp_C;
+float tilt;
 
+//// Mutexes
+//osMutexDef(MutexTemp);
+//osMutexDef(MutexTilt);
+//osMutexDef(MutexDisplay);
+
+//osMutexId tempC_mutex;
+//osMutexId tilt_mutex;
+//osMutexId display_mutex;
+
+// ID for thread
+osThreadId GetTilt_thread;
+osThreadId GetTemp_thread;
 
 // kalman state for temperature
 kalman_state kstate = {0.0025, 5.0, 1100.0, 0.0, 0.0};
@@ -51,7 +63,7 @@ void GetTemp(void const *argument) {
 
 				//printf("filtered: %f\n", f_output);
 				// Convert to temperature
-				float temp_C = voltage2temp(f_output);
+				temp_C = voltage2temp(f_output);
 				printf("temp: %f\n", temp_C);
 			}
 		}
@@ -77,7 +89,7 @@ void GetTilt(void const *argument) {
 				Kalmanfilter_C(xyz_float[1], &xyz_float[1], &kstate_Y); // Y
 				Kalmanfilter_C(xyz_float[2], &xyz_float[2], &kstate_Z); // Z
 
-				float tilt = getTilt(BETA, xyz_float);
+				tilt = getTilt(BETA, xyz_float);
 				//setNumDisplay(tilt);
 				printf("tilt: %f\n", tilt);
 
@@ -93,14 +105,37 @@ void ReadKeypad(void const *argument){
 }
 
 void Display7Segment(void const *argument){
-	while(1){
-	//	Display();
-	}
+	//while(1){
+		printf("display\n");
+		if(getTIM3_count() == 3) {
+			setTIM3_count(0);
+		} else {
+			setTIM3_count(getTIM3_count()+1);
+		}
+		float toDisplay = 0;
+		osStatus status;
+		//osStatus status = osMutexWait(display_mutex, osWaitForever);
+		if (getDisplayMode() == TEMP_MODE) {
+			//osMutexRelease(display_mutex);
+			//status = osMutexWait(tempC_mutex, osWaitForever);
+			toDisplay = temp_C;
+			//osMutexRelease(tempC_mutex);
+		} else if (getDisplayMode() == TILT_MODE) {
+			//osMutexRelease(display_mutex);
+			//status = osMutexWait(tempC_mutex, osWaitForever);
+			toDisplay = tilt;
+			//osMutexRelease(tilt_mutex);
+		}
+		Display(toDisplay);
+	//}
 }
 
 osThreadDef(GetTilt, osPriorityNormal, 1, 0);
 osThreadDef(GetTemp, osPriorityNormal, 1, 0);
 osThreadDef (ReadKeypad, osPriorityNormal, 1, 0);
+
+// Timer defs
+osTimerDef(DisplayTimer, Display7Segment);
 
 /*
  * main: initialize and start the system
@@ -110,6 +145,14 @@ int main (void) {
 	
 	// ID for thread
 	osThreadId ReadKeypad_thread;
+	
+	// ID for timer
+	osTimerId display_timer;
+	
+	// Create the mutexes
+//	tempC_mutex = osMutexCreate(osMutex(MutexTemp));
+//	tilt_mutex = osMutexCreate(osMutex(MutexTilt));
+//	display_mutex = osMutexCreate(osMutex(MutexDisplay));
 	
   // initialize peripherals here
 	
@@ -124,6 +167,8 @@ int main (void) {
 	configInit_ADC();
 	configInit_ADC_Int();
 	
+	GPIO_config();
+	
 	//Enable temperatur sensor - Set the TSVREFE bit
 	ADC_TempSensorVrefintCmd(ENABLE);
 	
@@ -135,7 +180,14 @@ int main (void) {
 	
 	ReadKeypad_thread = osThreadCreate(osThread(ReadKeypad), NULL);
 	
+	// Create the timers
+	display_timer = osTimerCreate(osTimer(DisplayTimer), osTimerPeriodic, NULL);
+	
+	setDisplayMode(TILT_MODE);
+	
 	EXTI_GenerateSWInterrupt(EXTI_Line0); // generate an interrupt to initialize the sampling process
+	printf("main\n");
+	osTimerStart(display_timer, 10); // start timer execution
 	
 	osKernelStart ();                         // start thread execution 
 }
