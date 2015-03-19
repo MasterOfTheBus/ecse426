@@ -25,6 +25,7 @@
 // variables to store the tilt and temperature
 float temp_C;
 float tilt;
+int digit;
 
 // flashing count
 uint8_t danger;
@@ -109,7 +110,7 @@ void GetTilt(void const *argument) {
 }
 
 void ReadKeypad(void const *argument){
-	int digit = Keypad_read();				// check keypad
+	digit = Keypad_read();				// check keypad
 	if (digit != NO_INPUT) {
 		printf("user input: %i\n", digit);
 	}
@@ -157,27 +158,44 @@ void Display7Segment(void const *argument){
 }
 
 void DisplayLED(void const *argument){
+	int countUpTo;
+	int counter = 0;
 	while(1){
-		// Turn LEDs on according to user input
-/*		if (userInput == 1){
-			GPIO_SetBits(GPIOD, GPIO_Pin_12);
-		} else if (userInput == 2){
-			GPIO_SetBits(GPIOD, GPIO_Pin_13);
-		} else if (userInput == 3){
-			GPIO_SetBits(GPIOD, GPIO_Pin_14);
-		}else if (userInput == 4){
-			GPIO_SetBits(GPIOD, GPIO_Pin_15);
-		}*/
+		if (tilt <= 180 ) countUpTo = (int) tilt;
+		else countUpTo = 360-(int) tilt;
+
 		
+		if (counter < countUpTo){
+			// Turn LEDs on according to user input
+			if (digit == 1){
+				GPIO_SetBits(GPIOD, GPIO_Pin_12);
+				GPIO_ResetBits(GPIOD, GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15);
+			} else if (digit == 2){
+				GPIO_SetBits(GPIOD, GPIO_Pin_13);
+				GPIO_ResetBits(GPIOD, GPIO_Pin_12 | GPIO_Pin_14 | GPIO_Pin_15);
+			} else if (digit == 3){
+				GPIO_SetBits(GPIOD, GPIO_Pin_14);
+				GPIO_ResetBits(GPIOD, GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_15);
+			}else if (digit == 4){
+				GPIO_SetBits(GPIOD, GPIO_Pin_15);
+				GPIO_ResetBits(GPIOD, GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14);
+			}
+			counter ++;
+		} else{
 		// Turn LEDs off based PWM...
-	
+			GPIO_ResetBits(GPIOD, GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15);
+			if (counter == 180) counter=0;
+			else counter ++;
+		}
 	}
 }
 osThreadDef(GetTilt, osPriorityNormal, 1, 1000);
 osThreadDef(GetTemp, osPriorityNormal, 1, 1000);
+
 // Timer defs
 osTimerDef(DisplayTimer, Display7Segment);
 osTimerDef(KeypadTimer, ReadKeypad);
+osTimerDef(LEDTimer, DisplayLED);
 
 /*
  * main: initialize and start the system
@@ -188,6 +206,7 @@ int main (void) {
 	// ID for timer
 	osTimerId display_timer;
 	osTimerId keypad_timer;
+	osTimerId led_timer;
 	
 	// Create the mutexes
 //	tempC_mutex = osMutexCreate(osMutex(MutexTemp));
@@ -225,6 +244,8 @@ int main (void) {
 	
 	keypad_timer = osTimerCreate(osTimer(KeypadTimer), osTimerPeriodic, NULL);
 	
+	led_timer = osTimerCreate(osTimer(LEDTimer), osTimerPeriodic, NULL);
+	
 	setDisplayMode(TEMP_MODE);
 	
 	danger = 0;
@@ -235,6 +256,8 @@ int main (void) {
 	osTimerStart(display_timer, 7); // start timer execution
 	
 	osTimerStart(keypad_timer, 20); // start keypad reading
+	
+	osTimerStart(led_timer, 20);	// start LED display
 	
 	osKernelStart ();                         // start thread execution 
 }
