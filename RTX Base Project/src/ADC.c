@@ -1,47 +1,44 @@
 #include "ADC.h"
-#include <stdio.h>
-void configInit_common_ADC(uint32_t mode,
-													 uint32_t prescaler,
-													 uint32_t DMAAccessMode,
-													 uint32_t twoSamplingDelay) {
+#include "misc.h"
+void configInit_common_ADC() {
 	
 	ADC_CommonInitTypeDef adc_common_init;
-	adc_common_init.ADC_Mode = mode;
-	adc_common_init.ADC_Prescaler = prescaler;
-	adc_common_init.ADC_DMAAccessMode = DMAAccessMode;
-	adc_common_init.ADC_TwoSamplingDelay = twoSamplingDelay;
+	adc_common_init.ADC_Mode = ADC_Mode_Independent;
+	adc_common_init.ADC_Prescaler = ADC_Prescaler_Div2;
+	adc_common_init.ADC_DMAAccessMode = ADC_DMAAccessMode_Disabled;
+	adc_common_init.ADC_TwoSamplingDelay = ADC_TwoSamplingDelay_5Cycles;
 	ADC_CommonInit(&adc_common_init); //Initialization
 }
 
-void configInit_ADC(ADC_TypeDef* ADCx,
-										uint32_t periph_ADCx,
-										uint32_t resolution,
-										FunctionalState scanConvMode,
-										FunctionalState contConvMode,
-										uint32_t externalTrigConvEdge,
-										uint32_t externalTrigConv,
-										uint32_t dataAlign,
-										uint8_t nbrOfConversion,
-										uint8_t channel,
-										uint8_t rank,
-										uint8_t sampleTime) {
+void configInit_ADC() {
 											
-	RCC_APB2PeriphClockCmd(periph_ADCx, ENABLE);
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC1, ENABLE);
 											
 	ADC_InitTypeDef adc_init;
 		
-	adc_init.ADC_Resolution = resolution;
-	adc_init.ADC_ScanConvMode = scanConvMode;
-	adc_init.ADC_ContinuousConvMode = contConvMode;
-	adc_init.ADC_ExternalTrigConvEdge = externalTrigConvEdge;
-	adc_init.ADC_ExternalTrigConv = externalTrigConv;
-	adc_init.ADC_DataAlign = dataAlign;
-	adc_init.ADC_NbrOfConversion = nbrOfConversion;
+	adc_init.ADC_Resolution = ADC_Resolution_12b;
+	adc_init.ADC_ScanConvMode = DISABLE;
+	adc_init.ADC_ContinuousConvMode = DISABLE;
+	adc_init.ADC_ExternalTrigConvEdge = ADC_ExternalTrigConvEdge_None;
+	//adc_init.ADC_ExternalTrigConv = externalTrigConv;
+	adc_init.ADC_DataAlign = ADC_DataAlign_Right;
+	adc_init.ADC_NbrOfConversion = 1;
 	ADC_Init(ADC1, &adc_init); //Initialization
 	
-	ADC_RegularChannelConfig(ADCx, channel, rank, sampleTime); //Setting Channel and ADC
+	ADC_RegularChannelConfig(ADC1, ADC_Channel_16, 1, ADC_SampleTime_480Cycles); //Setting Channel and ADC
 
-	ADC_Cmd(ADCx, ENABLE); //Enable Module - Set the ADON bit
+	ADC_Cmd(ADC1, ENABLE); //Enable Module - Set the ADON bit
+											
+	ADC_ITConfig(ADC1, ADC_IT_EOC, ENABLE);
+}
+										
+void configInit_ADC_Int() {
+	NVIC_InitTypeDef nvic_init;
+	nvic_init.NVIC_IRQChannel = ADC_IRQn;
+	nvic_init.NVIC_IRQChannelPreemptionPriority = 0x01;
+	nvic_init.NVIC_IRQChannelSubPriority = 0x01;
+	nvic_init.NVIC_IRQChannelCmd = ENABLE;
+	NVIC_Init(&nvic_init);
 }
 
 uint32_t getTemp() {

@@ -61,18 +61,8 @@ static arm_matrix_instance_f32 calParams;
 	@brief Initialize the mems configurations
 													 
 	The function activates writing to the status registers when Data Ready.
-	
-	@params Power Power Mode of the sensor 
-	@params DataRate
-	@params Axes
-	@params FullScale
-	@params SelfTest
 	*/
-void Accel_InitConfig(uint8_t Power,
-											uint8_t DataRate,
-											uint8_t Axes,
-											uint8_t FullScale,
-											uint8_t SelfTest);
+void Accel_InitConfig(void);
 
 /**
 	@brief Calibrate the sensor

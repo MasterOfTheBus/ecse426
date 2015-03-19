@@ -1,20 +1,16 @@
 #include "timer.h"
 
-void Timer_config(uint16_t Prescaler,
-									uint16_t CounterMode,
-									uint32_t Period,
-									uint16_t ClockDivision,
-									uint8_t RepetitionCounter){
+void Timer_config(){
 	//Enable Timer3									
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
 										
 	//Timer configuration
 	TIM_TimeBaseInitTypeDef timer_init;
-	timer_init.TIM_Prescaler = Prescaler;
-	timer_init.TIM_CounterMode = CounterMode;
-	timer_init.TIM_Period = Period;
-	timer_init.TIM_ClockDivision = ClockDivision;
-	timer_init.TIM_RepetitionCounter = RepetitionCounter;
+	timer_init.TIM_Prescaler = 1000;
+	timer_init.TIM_CounterMode = TIM_CounterMode_Up;
+	timer_init.TIM_Period = 280;
+	timer_init.TIM_ClockDivision = TIM_CKD_DIV1;
+	timer_init.TIM_RepetitionCounter = 0;
 	
 	TIM_TimeBaseInit(TIM3, &timer_init);
 	TIM_Cmd(TIM3, ENABLE);
@@ -41,10 +37,10 @@ int getTimInt(void) {
 	return (TIM3_interrupt);
 }
 
-void TIM3_IRQHandler(){
-	if (TIM_GetITStatus(TIM3, TIM_IT_Update) != RESET){
-		TIM3_interrupt = 1;
+//void TIM3_IRQHandler(){
+//	if (TIM_GetITStatus(TIM3, TIM_IT_Update) != RESET){
+//		TIM3_interrupt = 1;
 
-		TIM_ClearITPendingBit(TIM3, TIM_IT_Update);
-	}
-}
+//		TIM_ClearITPendingBit(TIM3, TIM_IT_Update);
+//	}
+//}

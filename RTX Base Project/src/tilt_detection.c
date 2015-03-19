@@ -5,18 +5,18 @@
 #include <stdio.h>
 #endif
 
-void Accel_InitConfig(uint8_t Power,
-											uint8_t DataRate,
-											uint8_t Axes,
-											uint8_t FullScale,
-											uint8_t SelfTest) {
+void Accel_InitConfig() {
 												
 	LIS302DL_InitTypeDef accel_init;
-	accel_init.Power_Mode = Power;
-  accel_init.Output_DataRate = DataRate;
-  accel_init.Axes_Enable = Axes;
-  accel_init.Full_Scale = FullScale;
-	accel_init.Self_Test = SelfTest;
+	accel_init.Power_Mode = LIS302DL_LOWPOWERMODE_ACTIVE; // power on the mems sensor
+  accel_init.Output_DataRate = LIS302DL_DATARATE_100; // Data rate at 100 Hz as specified
+  accel_init.Axes_Enable = LIS302DL_X_ENABLE | LIS302DL_Y_ENABLE | LIS302DL_Z_ENABLE; // Enable all the axes
+  accel_init.Full_Scale = LIS302DL_SENSITIVITY_2_3G; // We won't get up to 9 g's of force in this lab, only tilting
+																							// sensitivity is the gain of the sensor; average of +1g and -1g direction
+																							// adjust raw data by 18mg/digit
+	accel_init.Self_Test = LIS302DL_SELFTEST_NORMAL; // self test off
+																							// when enabled, will generate a defined actuation force
+																							// if output signal is within defined parameters, then the sensor is working
 	LIS302DL_Init(&accel_init);
 	
 	uint8_t ctrl = 0x04; // Set the value of control register 3 in order to setup interrupts on a data ready signal
