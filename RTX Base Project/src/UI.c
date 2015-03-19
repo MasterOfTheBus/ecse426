@@ -107,17 +107,21 @@ void displayDigit(int digit) {
 				Seven();
 			else if (digits[digit]==8)
 				Eight();
-			else
+			else if (digits[digit]==9)
 				Nine();
+			else
+				Off();
 }
 
 void Display(float n){
-//	if (input !=500 ){
-//	 m = input;
-//		decimal = 0;
-//	}
-//	else{
-		uint8_t decimal;
+	uint8_t decimal;
+	if (n < 0) {
+		uint8_t i;
+		for (i = 0; i < 3; i++) {
+			digits[i] = 10;
+		}
+	} else {
+
 		int m = (int)n; 			// extract integer part
 		n = n-(float)(m);		// extract floating point part
 		
@@ -131,12 +135,13 @@ void Display(float n){
 			decimal = 2;
 			m = m* 100 + (int)(n*100);
 		}
-//	}
+
 		uint8_t i;
 		for (i=0; i<3;i++){
 			digits[i] = (int)(m%10);
 			m = (m-(m%10))/10;
 		}
+	}
 		//printf ("%i %i %i",digits[2], digits[1], digits[0]);
 
 		// Get hardware timer value
@@ -161,8 +166,6 @@ void Display(float n){
 		//printf("second loop\n");
 		// Set second digit
 		if (TIM3_interrupt_count == 1) {
-		//while (TIM_GetCounter(TIM3) < (timerValue+2*setTime)){
-			//printf("get counter2: %i\n", TIM_GetCounter(TIM3));
 			GPIO_WriteBit(GPIOE, GPIO_Pin_7 | GPIO_Pin_10 | GPIO_Pin_12 | GPIO_Pin_14, Bit_RESET); // Release other select lines
 			GPIO_WriteBit(GPIOD, GPIO_Pin_9, Bit_RESET);
 			GPIO_WriteBit(GPIOE, GPIO_Pin_8, Bit_SET);		// Select digit 2
@@ -187,14 +190,23 @@ void Display(float n){
 		}
 		
 		if (TIM3_interrupt_count == 3) {
-			// Set degree
-			GPIO_WriteBit(GPIOE, GPIO_Pin_7 | GPIO_Pin_8 | GPIO_Pin_10 | GPIO_Pin_12 | GPIO_Pin_14, Bit_RESET); // Release other select lines
-			GPIO_WriteBit(GPIOD, GPIO_Pin_9, Bit_SET);	// Select degree
-			GPIO_WriteBit(GPIOD, GPIO_Pin_10 , Bit_SET);	// Turn on degree LED
+			if (n >= 0) {
+				// Set degree
+				GPIO_WriteBit(GPIOE, GPIO_Pin_7 | GPIO_Pin_8 | GPIO_Pin_10 | GPIO_Pin_12 | GPIO_Pin_14, Bit_RESET); // Release other select lines
+				GPIO_WriteBit(GPIOD, GPIO_Pin_9, Bit_SET);	// Select degree
+				GPIO_WriteBit(GPIOD, GPIO_Pin_10 , Bit_SET);	// Turn on degree LED
+			} else {
+				Off();
+			}
 		}
 }
 
-	
+void Off() {
+	// Turn off
+	GPIO_WriteBit(GPIOB, GPIO_Pin_11 | GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15, Bit_RESET);
+	GPIO_WriteBit(GPIOD, GPIO_Pin_8 | GPIO_Pin_10, Bit_RESET);
+	GPIO_WriteBit(GPIOE, GPIO_Pin_9 | GPIO_Pin_11 | GPIO_Pin_13, Bit_RESET);
+}
 
 void Zero(){
 

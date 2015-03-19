@@ -4,6 +4,8 @@
    @date 2015/02/20
 */
 
+#define THRESHOLD_TEMP 45
+
 // Variables to convert voltage to temperature
 
 /** \def step_size

@@ -84,6 +84,8 @@ int8_t getDisplayMode(void);
 	*/
 void Display(float n);
 
+/** @brief Turn Segments off */
+void Off(void);
 /** @brief Display a Zero	*/
 void Zero(void);
 /** @brief Display a One */

@@ -26,14 +26,20 @@
 float temp_C;
 float tilt;
 
+// flashing count
+uint8_t danger;
+uint16_t dangerCount;
+
 //// Mutexes
 //osMutexDef(MutexTemp);
 //osMutexDef(MutexTilt);
 osMutexDef(MutexDisplay);
+osMutexDef(MutexFlash);
 
 //osMutexId tempC_mutex;
 //osMutexId tilt_mutex;
 osMutexId display_mutex;
+osMutexId flash_mutex;
 
 // ID for thread
 osThreadId GetTilt_thread;
@@ -64,6 +70,11 @@ void GetTemp(void const *argument) {
 				//printf("filtered: %f\n", f_output);
 				// Convert to temperature
 				temp_C = voltage2temp(f_output);
+				
+				osMutexWait(flash_mutex, osWaitForever);
+				danger = ((temp_C >= THRESHOLD_TEMP) ? 1 : 0);
+				osMutexRelease(flash_mutex);
+
 				printf("temp: %f\n", temp_C);
 			}
 		}
@@ -111,26 +122,38 @@ void ReadKeypad(void const *argument){
 }
 
 void Display7Segment(void const *argument){
-		if(getTIM3_count() == 3) {
-			setTIM3_count(0);
-		} else {
-			setTIM3_count(getTIM3_count()+1);
+	if(getTIM3_count() == 3) {
+		setTIM3_count(0);
+	} else {
+		setTIM3_count(getTIM3_count()+1);
+	}
+
+	float toDisplay = 0;
+	osStatus status = osMutexWait(display_mutex, osWaitForever);
+	if (getDisplayMode() == TEMP_MODE) {
+		//status = osMutexWait(tempC_mutex, osWaitForever);
+		toDisplay = temp_C;
+		//osMutexRelease(tempC_mutex);
+	} else if (getDisplayMode() == TILT_MODE) {
+		//status = osMutexWait(tempC_mutex, osWaitForever);
+		toDisplay = tilt;
+		//osMutexRelease(tilt_mutex);
+	}
+	osMutexRelease(display_mutex);
+
+	osMutexWait(flash_mutex, osWaitForever);
+	if (danger) {
+		dangerCount++;
+		if (dangerCount < 50) {
+			toDisplay = -1;
 		}
-		float toDisplay = 0;
-		osStatus status = osMutexWait(display_mutex, osWaitForever);
-		if (getDisplayMode() == TEMP_MODE) {
-			//osMutexRelease(display_mutex);
-			//status = osMutexWait(tempC_mutex, osWaitForever);
-			toDisplay = temp_C;
-			//osMutexRelease(tempC_mutex);
-		} else if (getDisplayMode() == TILT_MODE) {
-			//osMutexRelease(display_mutex);
-			//status = osMutexWait(tempC_mutex, osWaitForever);
-			toDisplay = tilt;
-			//osMutexRelease(tilt_mutex);
+		if (dangerCount > 100) {
+			dangerCount = 0;
 		}
-		osMutexRelease(display_mutex);
-		Display(toDisplay);
+	}
+	osMutexRelease(flash_mutex);
+		
+	Display(toDisplay);
 }
 
 void DisplayLED(void const *argument){
@@ -152,7 +175,6 @@ void DisplayLED(void const *argument){
 }
 osThreadDef(GetTilt, osPriorityNormal, 1, 1000);
 osThreadDef(GetTemp, osPriorityNormal, 1, 1000);
-osThreadDef (DisplayLED, osPriorityNormal, 1, 0);
 // Timer defs
 osTimerDef(DisplayTimer, Display7Segment);
 osTimerDef(KeypadTimer, ReadKeypad);
@@ -162,9 +184,6 @@ osTimerDef(KeypadTimer, ReadKeypad);
  */
 int main (void) {
   osKernelInitialize ();                    // initialize CMSIS-RTOS
-	
-	// ID for thread
-	osThreadId DisplayLED_thread;
 
 	// ID for timer
 	osTimerId display_timer;
@@ -173,7 +192,8 @@ int main (void) {
 	// Create the mutexes
 //	tempC_mutex = osMutexCreate(osMutex(MutexTemp));
 //	tilt_mutex = osMutexCreate(osMutex(MutexTilt));
-//	display_mutex = osMutexCreate(osMutex(MutexDisplay));
+	display_mutex = osMutexCreate(osMutex(MutexDisplay));
+	flash_mutex = osMutexCreate(osMutex(MutexFlash));
 	
   // initialize peripherals here
 	
@@ -200,14 +220,15 @@ int main (void) {
 
 	GetTemp_thread = osThreadCreate(osThread(GetTemp), NULL);
 	
-	//DisplayLED_thread = osThreadCreate(osThread(DisplayLED), NULL);
-	
 	// Create the timers
 	display_timer = osTimerCreate(osTimer(DisplayTimer), osTimerPeriodic, NULL);
 	
 	keypad_timer = osTimerCreate(osTimer(KeypadTimer), osTimerPeriodic, NULL);
 	
 	setDisplayMode(TEMP_MODE);
+	
+	danger = 0;
+	dangerCount = 0;
 	
 	EXTI_GenerateSWInterrupt(EXTI_Line0); // generate an interrupt to initialize the sampling process
 	
