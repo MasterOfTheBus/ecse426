@@ -13,17 +13,6 @@
 #include "arm_math.h"
 
 /** @define
-		@brief Macro to control calibration
-	 
-	 Used to control offline calibration. Set calibrate to 1 to enable calibration at startup.
-	 Set calibrate to 0 to use calibration parameters previously acquired.
-	 
-	 Calibrate should be set to 0 since @ref calibrateSensor does not include functionality to 
-	 collect new data for the 6 positions along the axes.
-	*/
-#define calibrate 0
-
-/** @define
 		@brief Constant used to specify angle type as the pitch
 	*/
 #define ALPHA (uint8_t)0
@@ -40,15 +29,11 @@
 		The values are previously obtained from offline calibration using the Least Squares Method.
 		Reacquire values for different sensors.
 	*/
-#if calibrate
-static float cal_data[12];
-#else	
 // calibration values from matlab
 static float cal_data[] = {-0.001007704542329, -0.000023576795574, -0.000020500331472,
 													 -0.000005549672267, -0.001001988618073, -0.000000555682904,
 													 0.000001981760320, -0.000006760475090, 0.000964570821189,
 													 -0.520517014244453, 0.477262260417352, -0.440876330953729};
-#endif
 
 /** @var
 		@brief The matrix storing the normalization values.

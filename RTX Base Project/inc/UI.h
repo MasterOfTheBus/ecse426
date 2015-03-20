@@ -30,14 +30,6 @@ static int displayMode;
 	*/
 static int TIM3_interrupt_count;
 
-/** @var
-		@brief Signal 
-						- 0 = still waiting for user input
-						- 1 = done reading -- ENTER presse
-						- 2 = * pressed 
-	*/
-static int readStatus;
-
 /**
 		@brief Which digit to display
 		@param val 0 to 3 for the 4 7-seg displays
@@ -48,18 +40,6 @@ void setTIM3_count(int val);
 		@retval int 0 to 3 for the 4 7-seg displays
 	*/
 int getTIM3_count(void);
-
-/**
-		@brief Set the value of the userInput, @ref userInput
-		Only sets the value of the variable. Use @ref Keypad_read to get user input from keypad
-		@param val The value to set the userInput
-	*/
-void setReadStatus(int val);
-/**
-		@brief Get the value of the userInput, @ref userInput
-		@retval The value of the userInput
-	*/
-int getReadStatus(void);
 
 /**
 		@brief Set the display mode, @ref displayMode
@@ -177,11 +157,3 @@ void configInit_GPIO(GPIO_TypeDef* GPIOx,
 										 GPIOOType_TypeDef oType,
 										 GPIOPuPd_TypeDef puPd);
 
-/**
-	@brief Display the animation to indicate the direction to tilt board to match desired tilt angle
-
-	If angleType is @ref ALPHA then the direction is up/down. If angleType is @ref BETA then the direction is right/left.
-
-	@param upDown The direction to tilt the board. Value of 1 indicates up/right, value of -1 indicates down/left, value of 0 indicates matching.
-	*/
-void correctionOutput(int8_t upDown);

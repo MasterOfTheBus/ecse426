@@ -3,13 +3,8 @@
 #include "stm32f4xx_conf.h"
 #include "UI.h"
 
-//int timerValue;	
 int digits[3] = {0};
-//int setTime = 160;
 int result = 0;
-//int readDigit = 1;
-//int displayUserInput = 0;
-//int keypadWait = 10;
 int count = 0;
 int lastResult = 99;
 
@@ -21,14 +16,6 @@ void setTIM3_count(int val) {
 
 int getTIM3_count(void) {
 	return (TIM3_interrupt_count);
-}
-
-void setReadStatus(int val) {
-	readStatus = val;
-}
-
-int getReadStatus(void) {
-	return (readStatus);
 }
 	
 void setDisplayMode(int8_t val) {
@@ -513,47 +500,4 @@ int Keypad_read(){
 	lastResult = result; // keep history
 	return userInput;
 }
-#if 0
-void correctionOutput(int8_t upDown) {
-	if (upDown == 0) {
-		return;
-	}
-	// display
-			GPIO_WriteBit(GPIOE, GPIO_Pin_8 | GPIO_Pin_10 | GPIO_Pin_12 | GPIO_Pin_14, Bit_RESET); // Release other select lines
-			GPIO_WriteBit(GPIOD, GPIO_Pin_9, Bit_RESET);
-			GPIO_WriteBit(GPIOE, GPIO_Pin_7, Bit_SET);		// Select digit 1
-			GPIO_WriteBit(GPIOE, GPIO_Pin_13 , Bit_RESET);	// Reset decimal point
-	if (correctionCount < 100) {
-		// bottom line
-			GPIO_WriteBit(GPIOE, GPIO_Pin_9, Bit_SET);
-			GPIO_WriteBit(GPIOB, GPIO_Pin_11 | GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15, Bit_RESET);
-			GPIO_WriteBit(GPIOD, GPIO_Pin_8 | GPIO_Pin_10, Bit_RESET);
-			GPIO_WriteBit(GPIOE, GPIO_Pin_11, Bit_RESET);
-	} else if (correctionCount < 200) {
-			// middle line
-			GPIO_WriteBit(GPIOB, GPIO_Pin_12, Bit_SET);
-			GPIO_WriteBit(GPIOB, GPIO_Pin_11 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15, Bit_RESET);
-			GPIO_WriteBit(GPIOD, GPIO_Pin_8 | GPIO_Pin_10, Bit_RESET);
-			GPIO_WriteBit(GPIOE, GPIO_Pin_9 | GPIO_Pin_11, Bit_RESET);
-	} else if (correctionCount < 300) {
-			// top line
-			GPIO_WriteBit(GPIOB, GPIO_Pin_13, Bit_SET);
-			GPIO_WriteBit(GPIOB, GPIO_Pin_11 | GPIO_Pin_12 | GPIO_Pin_14 | GPIO_Pin_15, Bit_RESET);
-			GPIO_WriteBit(GPIOD, GPIO_Pin_8 | GPIO_Pin_10, Bit_RESET);
-			GPIO_WriteBit(GPIOE, GPIO_Pin_9 | GPIO_Pin_11, Bit_RESET);
-	}
 
-	// adjust for next value
-	if (upDown == 1) {
-		correctionCount++;
-		if (correctionCount > 300) {
-			correctionCount = 0;
-		}
-	} else if (upDown == -1) {
-		correctionCount--;
-		if (correctionCount < 0) {
-			correctionCount = 300;
-		}
-	}
-}
-#endif

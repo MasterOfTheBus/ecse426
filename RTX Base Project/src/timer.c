@@ -38,10 +38,3 @@ int getTimInt(void) {
 	return (TIM3_interrupt);
 }
 
-//void TIM3_IRQHandler(){
-//	if (TIM_GetITStatus(TIM3, TIM_IT_Update) != RESET){
-//		TIM3_interrupt = 1;
-
-//		TIM_ClearITPendingBit(TIM3, TIM_IT_Update);
-//	}
-//}
