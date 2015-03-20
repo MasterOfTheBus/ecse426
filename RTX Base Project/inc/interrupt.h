@@ -32,13 +32,19 @@ void setITStatus(int set);
 int getITStatus(void);
 
 /**
-	@brief Configuration and Initialization of the external interrupt
-
+	@brief Configuration and Initialization of the external interrupt specifically for the accelerometer
+	
+	The GPIO pin used is Pin 0 on Port E corresponding to the sensor's INT1 pin
+	The GPIO input mode is set to GPIO_Mode_IN since the processor will be reading the interrupt from the sensor.
+	Since the GPIO pin used is pin 0, the External Interrupt line is correspondingly EXTI_Line0.
+	The interrupt signal is rising.
+	The priority of the interrupt is set to 0x03 since this sampling rate is the fastest.
 */
 void InitInterrupt(void);
 
 /**
 	@brief The external interrupt handler
-	Sets the @ref interrupt flag
+	Sets the interrupt flag.
+	Or it can also signal the thread that will sample the accelerometer data
 */
 void EXTI0_IRQHandler(void);

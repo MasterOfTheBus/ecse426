@@ -50,17 +50,6 @@ static arm_matrix_instance_f32 calParams;
 void Accel_InitConfig(void);
 
 /**
-	@brief Calibrate the sensor
-
-	Uses the relation X = inverse( transpose(w) * w ) * transpose(w) * Y and solves for X.
-	Y is the predefined values along +/- x, y, z axes. W is acquired data corresponding to the positions in Y.
-	X is the calibrated normalization matrix values.
-
-	@ref calibrate must have value of 1 in order to calibrate
-	*/
-void calibrateSensor(void);
-
-/**
 	@brief Normalize the accelerometer data
 
 	Apply the calibration parameters to the data to scale to 1g.

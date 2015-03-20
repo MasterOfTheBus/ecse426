@@ -8,20 +8,29 @@
 #include "stm32f4xx_tim.h"
 
 // define the display mode
+/** @def Defines the mode for temperature display */
 #define TEMP_MODE (int8_t)(-1)
+/** @def Defines the mdoe for tilt angle display */
 #define TILT_MODE (int8_t)1
 
 // special key defs
+/** @def Defines the value of no input into the keypad */
 #define NO_INPUT 99
+/** @def Defines the value of the # pressed on the keypad */
 #define ENTER 22
+/** @def Defines the value of the * pressed on the keypad */
 #define STAR 21
+/** @def Defines the value of D pressed on the keypad */
 #define D_KEY 13
+/** @def Defines the value of C pressed on the keypad */
 #define C_KEY 12
+/** @def Defines the value of B pressed on the keypad */
 #define B_KEY 11
+/** @def Defines the value of A pressed on the keypad */
 #define A_KEY 10
 
 /** @var
-	@breif 0 for temperature, 1 for tilt
+	@brief 0 for temperature, 1 for tilt
 	*/
 static int displayMode;
 

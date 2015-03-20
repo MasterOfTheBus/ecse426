@@ -11,10 +11,8 @@
 	*
 		The parameters all correspond to the parameters of the ADC_CommonInitTypeDef struct.
 	*
-	* @param mode Configures the ADC to operate in independent or multi mode.
-	* @param prescaler Select the frequency of the clock to the ADC. The clock is common for all the ADCs.
-	* @param DMAAccessMode Configures the Direct memory access mode for multi ADC mode.
-	* @param twoSamplingDelay Configures the Delay between 2 sampling phases.
+		ADC_Mode is set as independent to only take the value from a single ADC unit.
+		There is no need for DMA so it is disabled.
 	* @retval None.
 	*/
 void configInit_common_ADC(void);
@@ -22,13 +20,10 @@ void configInit_common_ADC(void);
 /**
 	* @brief Initialize the specific ADC component and enable it.
 	*
-		The periph_ADCx parameter corresponds to the parameter in the RCC_AHB1PeriphClockCmd function.
-
-		The parameters resolution, scanConvMode, contConvMode, externalTrigConvEdge, externalTrigConv, dataAlign and nbrOfConversion all
-		correspond to the parameters of the ADC_InitTypeDef struct used to initialize the specific ADC component.
-
-		The parameters ADCx, channel, rank, and sampleTime correspond to the parameters of the ADC_RegularChannelConfig funtion used to configure
-		the ADC channels.
+		The bit resolution of the returned values are 12 bits.
+		Only single conversion is necessary, so Continuous scan mode is disabled.
+		Additionally, the number of conversions is 1.
+		The End of Conversion Interrupt is also configured.
 	*
 
 	* @retval None.
@@ -36,7 +31,9 @@ void configInit_common_ADC(void);
 void configInit_ADC(void);
 
 /**
-	@brief Initialize NVIC for an EOC conversion of the ADC
+		@brief Initialize NVIC for an EOC conversion of the ADC
+	
+		Has the highest priority so that the value can be returned as fast as possible.
 	*/
 void configInit_ADC_Int(void);
 
