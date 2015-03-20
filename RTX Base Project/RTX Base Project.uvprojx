@@ -435,11 +435,6 @@
               <FilePath>.\src\ADC.c</FilePath>
             </File>
             <File>
-              <FileName>PWM.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\src\PWM.c</FilePath>
-            </File>
-            <File>
               <FileName>temperature.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\temperature.c</FilePath>
@@ -677,7 +672,7 @@
 
   <RTE>
     <apis>
-      <api Capiversion="1.0" Cclass="CMSIS" Cgroup="RTOS" exclusive="1">
+      <api Capiversion="1.0" Cclass="CMSIS" Cgroup="RTOS" Cvendor="ARM" exclusive="1">
         <package name="CMSIS" schemaVersion="1.2" url="http://www.keil.com/pack/" vendor="ARM" version="4.1.1"/>
         <targetInfos>
           <targetInfo name="Target 1"/>
