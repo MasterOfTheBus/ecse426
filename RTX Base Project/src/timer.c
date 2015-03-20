@@ -5,10 +5,11 @@ void Timer_config(){
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
 										
 	//Timer configuration
+	// 42Mhz / (1000 * 840) = 50Hz
 	TIM_TimeBaseInitTypeDef timer_init;
 	timer_init.TIM_Prescaler = 1000;
 	timer_init.TIM_CounterMode = TIM_CounterMode_Up;
-	timer_init.TIM_Period = 280;
+	timer_init.TIM_Period = 840;
 	timer_init.TIM_ClockDivision = TIM_CKD_DIV1;
 	timer_init.TIM_RepetitionCounter = 0;
 	

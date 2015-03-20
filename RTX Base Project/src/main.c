@@ -28,18 +28,18 @@ float tilt;
 int LEDnum;
 
 // flashing count
-uint8_t danger;
+uint8_t danger; // the toggle for the flashing state
 uint16_t dangerCount;
 
 int countUpTo;
 int counter = 0;
 
 //// Mutexes
-osMutexDef(MutexTemp);
-osMutexDef(MutexTilt);
-osMutexDef(MutexDisplay);
-osMutexDef(MutexFlash);
-osMutexDef(MutexLED);
+osMutexDef(MutexTemp); // protect the temp variable
+osMutexDef(MutexTilt); // protect the tilt variable
+osMutexDef(MutexDisplay); // protect the display mode variable
+osMutexDef(MutexFlash); // protect the danger variable
+osMutexDef(MutexLED); // protect the LEDnum variable
 
 osMutexId tempC_mutex;
 osMutexId tilt_mutex;
@@ -64,8 +64,8 @@ void GetTemp(void const *argument) {
 		osEvent evt = osSignalWait (TEMPERATURE_SIGNAL, osWaitForever);
 		if (evt.status == osEventSignal) {
 			osSignalClear (GetTemp_thread, TILT_SIGNAL);
-			ADC_SoftwareStartConv(ADC1);
-			evt = osSignalWait (EOC_SIGNAL, osWaitForever);
+			ADC_SoftwareStartConv(ADC1); // start the conversion
+			evt = osSignalWait (EOC_SIGNAL, osWaitForever); // wait for the end of conversion
 			if (evt.status == osEventSignal) {
 				osSignalClear (GetTemp_thread, EOC_SIGNAL);
 				float f_output;
@@ -122,18 +122,20 @@ void ReadKeypad(void const *argument){
 //		printf("user input: %i\n", digit);
 //	}
 	
-	if (digit == ENTER) {
+	if (digit == ENTER) { // switch modes
 		osMutexWait(display_mutex, osWaitForever);
 		setDisplayMode(getDisplayMode() * (-1));
 		osMutexRelease(display_mutex);
-	} else if (digit <= 4 && digit >= 0) {
+	} else if (digit <= 4 && digit >= 0) { // select LED
 		osMutexWait(LED_mutex, osWaitForever);
 		LEDnum = digit;
 		osMutexRelease(LED_mutex);
 	}
 }
 
+// Display the 7-segments
 void Display7Segment(void const *argument){
+	// counter incrementing for selected digit
 	if(getTIM3_count() == 3) {
 		setTIM3_count(0);
 	} else {
@@ -141,18 +143,19 @@ void Display7Segment(void const *argument){
 	}
 
 	float toDisplay = 0;
-	osMutexWait(display_mutex, osWaitForever);
+	osMutexWait(display_mutex, osWaitForever); // wait to check what display mode
 	if (getDisplayMode() == TEMP_MODE) {
 		osMutexWait(tempC_mutex, osWaitForever);
 		toDisplay = temp_C;
 		osMutexRelease(tempC_mutex);
 	} else if (getDisplayMode() == TILT_MODE) {
-		osMutexWait(tempC_mutex, osWaitForever);
+		osMutexWait(tilt_mutex, osWaitForever);
 		toDisplay = tilt;
 		osMutexRelease(tilt_mutex);
 	}
 	osMutexRelease(display_mutex);
 
+	// check if display should be flashing for overheat
 	osMutexWait(flash_mutex, osWaitForever);
 	if (danger) {
 		dangerCount++;
@@ -170,7 +173,7 @@ void Display7Segment(void const *argument){
 
 void DisplayLED(void const *argument){
 	osMutexWait(display_mutex, osWaitForever);
-	if (getDisplayMode() == TILT_MODE) {
+	if (getDisplayMode() == TILT_MODE) { // make sure it is only for the tilt display
 		if (tilt <= 180 ) countUpTo = ((int) tilt)/10;
 		else countUpTo = (360-(int) tilt)/10;
 
@@ -199,13 +202,15 @@ void DisplayLED(void const *argument){
 			else counter ++;
 		}
 	} else {
-		GPIO_ResetBits(GPIOD, GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15);
+		GPIO_ResetBits(GPIOD, GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15); // turn off LEDs
 	}
 	osMutexRelease(display_mutex);
 }
 
-osThreadDef(GetTilt, osPriorityAboveNormal, 1, 600);
-osThreadDef(GetTemp, osPriorityNormal, 1, 600);
+// Thread defs
+// both with custom stack size because 200 wasn't enough
+osThreadDef(GetTilt, osPriorityNormal, 1, 600); // 
+osThreadDef(GetTemp, osPriorityAboveNormal, 1, 600);
 
 // Timer defs
 osTimerDef(DisplayTimer, Display7Segment);
@@ -280,6 +285,7 @@ int main (void) {
 
 // Interrupt Handlers
 
+// External interrupt handler for tilt angle
 void EXTI0_IRQHandler(void) {
 	if (EXTI_GetITStatus(EXTI_Line0) != RESET) {
 		osSignalSet (GetTilt_thread, TILT_SIGNAL);
@@ -287,6 +293,7 @@ void EXTI0_IRQHandler(void) {
 	}
 }
 
+// Timer interrupt handler for the temperature sensor at 50hz
 void TIM3_IRQHandler(){
 	if (TIM_GetITStatus(TIM3, TIM_IT_Update) != RESET){
 		osSignalSet (GetTemp_thread, TEMPERATURE_SIGNAL);
@@ -295,6 +302,7 @@ void TIM3_IRQHandler(){
 	}
 }
 
+// Handler for end of conversion interrupt
 void ADC_IRQHandler() {
 	if (ADC_GetITStatus(ADC1, ADC_IT_EOC) != RESET) {
 		osSignalSet (GetTemp_thread, EOC_SIGNAL);

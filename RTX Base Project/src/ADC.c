@@ -35,13 +35,13 @@ void configInit_ADC() {
 void configInit_ADC_Int() {
 	NVIC_InitTypeDef nvic_init;
 	nvic_init.NVIC_IRQChannel = ADC_IRQn;
-	nvic_init.NVIC_IRQChannelPreemptionPriority = 0x01;
+	nvic_init.NVIC_IRQChannelPreemptionPriority = 0x01; // the highest nvic priority to make sure it happens
 	nvic_init.NVIC_IRQChannelSubPriority = 0x01;
 	nvic_init.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&nvic_init);
 }
 
-uint32_t getTemp() {
+uint32_t getTemp() { // not used
 		// Sampling and converting
 		ADC_SoftwareStartConv(ADC1); 														//Starting Conversion - set the SWSTART bit to 1
 		while(ADC_GetFlagStatus(ADC1, ADC_FLAG_EOC) == RESET); 	//Wait until EOC is set
