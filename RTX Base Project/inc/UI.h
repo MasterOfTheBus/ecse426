@@ -102,13 +102,13 @@ void Nine(void);
 	*	- Read user input from keypad	(pins LEFT TO RIGHT)
 	*																PE6(brown)	PC13(red)	PE4(orange)		PE5(yellow)	PB4(green)		PB5(blue)		PD1(purple)	PD2(black)
 	*	- Special mappings:	
-	*				A ------ value = 10 --- Equivalent to HEX representation (not used)
-	*				B ------ value = 11 --- Equivalent to HEX representation (not used)
-	*				C ------ value = 12 --- Equivalent to HEX representation (not used)
-	*				D ------ value = 13 --- Equivalent to HEX representation (not used)
-	*				# ------ value = 22 --- Used as ENTER
-	*				*	------ value = 21	---	Used for calibration (not used)
-	*				idle --- value = 99 --- Result when nothing is pressed
+	*			+	A ------ value = 10 --- Equivalent to HEX representation (not used)
+	*			+	B ------ value = 11 --- Equivalent to HEX representation (not used)
+	*			+	C ------ value = 12 --- Equivalent to HEX representation (not used)
+	*			+	D ------ value = 13 --- Equivalent to HEX representation (not used)
+	*			+	\# ------ value = 22 --- Used as ENTER
+	*			+	*	------ value = 21	---	Used for calibration (not used)
+	*			+	idle --- value = 99 --- Result when nothing is pressed
 	*	
 	*/
 int Keypad_readDigit(void);
@@ -121,13 +121,13 @@ int Keypad_readDigit(void);
 	*	-	Handle keypad bounce problem by counting the number if consecutive idle
 	*	-	Exit when ENTER is pressed
 	*	- Special mappings interpretation:	
-	*				A ------ value = 10 --- Equivalent to HEX representation (not used)
-	*				B ------ value = 11 --- Equivalent to HEX representation (not used)
-	*				C ------ value = 12 --- Equivalent to HEX representation (not used)
-	*				D ------ value = 13 --- Equivalent to HEX representation (not used)
-	*				# ------ value = 22 --- Used as ENTER --- Exit the function
-	*				*	------ value = 21	---	Used for calibration (not used)
-	*				idle --- value = 99 --- Result when nothing is pressed --- Continue waiting for input
+	*			+	A ------ value = 10 --- Equivalent to HEX representation (not used)
+	*			+	B ------ value = 11 --- Equivalent to HEX representation (not used)
+	*			+	C ------ value = 12 --- Equivalent to HEX representation (not used)
+	*			+	D ------ value = 13 --- Equivalent to HEX representation (not used)
+	*			+	\# ------ value = 22 --- Used as ENTER --- Exit the function
+	*			+	*	------ value = 21	---	Used for calibration (not used)
+	*			+	idle --- value = 99 --- Result when nothing is pressed --- Continue waiting for input
 	*	
 	*/
 int Keypad_read(void);

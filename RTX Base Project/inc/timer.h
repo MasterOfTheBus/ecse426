@@ -1,3 +1,9 @@
+/**
+   @file timer.h
+   @brief Configure Hardware Timer parameters for the ADC component.
+   @date 2015/03/23
+*/
+
 #include "stm32f4xx_conf.h"
 
 /** @var The timer interrupt flag*/
@@ -27,6 +33,8 @@ void setTimInt(int val);
 
 /**
 	@brief Get the value of the timer interrupt flag
+	
+	@retval int The value of the timer interrupt flag
 	*/
 int getTimInt(void);
 
