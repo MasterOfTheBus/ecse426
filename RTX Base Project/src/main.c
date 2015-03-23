@@ -34,19 +34,6 @@ uint16_t dangerCount;
 int countUpTo;
 int counter = 0;
 
-//// Mutexes
-//osMutexDef(MutexTemp); // protect the temp variable
-//osMutexDef(MutexTilt); // protect the tilt variable
-//osMutexDef(MutexDisplay); // protect the display mode variable
-//osMutexDef(MutexFlash); // protect the danger variable
-//osMutexDef(MutexLED); // protect the LEDnum variable
-
-//osMutexId tempC_mutex;
-//osMutexId tilt_mutex;
-//osMutexId display_mutex;
-//osMutexId flash_mutex;
-//osMutexId LED_mutex;
-
 // ID for thread
 osThreadId GetTilt_thread;
 osThreadId GetTemp_thread;
@@ -75,13 +62,8 @@ void GetTemp(void const *argument) {
 
 				//printf("filtered: %f\n", f_output);
 				// Convert to temperature
-//				osMutexWait(tempC_mutex, osWaitForever);
 				temp_C = voltage2temp(f_output);
-//				osMutexRelease(tempC_mutex);
-				
-//				osMutexWait(flash_mutex, osWaitForever);
 				danger = ((temp_C >= THRESHOLD_TEMP) ? 1 : 0);
-//				osMutexRelease(flash_mutex);
 
 				//printf("temp: %f\n", temp_C);
 			}
@@ -108,9 +90,7 @@ void GetTilt(void const *argument) {
 				Kalmanfilter_C(xyz_float[1], &xyz_float[1], &kstate_Y); // Y
 				Kalmanfilter_C(xyz_float[2], &xyz_float[2], &kstate_Z); // Z
 
-//				osMutexWait(tilt_mutex, osWaitForever);
 				tilt = getTilt(BETA, xyz_float);
-//				osMutexRelease(tilt_mutex);
 				//printf("tilt: %f\n", tilt);
 		}
 	}
@@ -118,18 +98,11 @@ void GetTilt(void const *argument) {
 
 void ReadKeypad(void const *argument){
 	int digit = Keypad_read();				// check keypad
-//	if (digit != NO_INPUT) {
-//		printf("user input: %i\n", digit);
-//	}
 	
 	if (digit == ENTER) { // switch modes
-//		osMutexWait(display_mutex, osWaitForever);
 		setDisplayMode(getDisplayMode() * (-1));
-//		osMutexRelease(display_mutex);
 	} else if (digit <= 4 && digit >= 0) { // select LED
-//		osMutexWait(LED_mutex, osWaitForever);
 		LEDnum = digit;
-//		osMutexRelease(LED_mutex);
 	}
 }
 
@@ -143,20 +116,13 @@ void Display7Segment(void const *argument){
 	}
 
 	float toDisplay = 0;
-//	osMutexWait(display_mutex, osWaitForever); // wait to check what display mode
 	if (getDisplayMode() == TEMP_MODE) {
-//		osMutexWait(tempC_mutex, osWaitForever);
 		toDisplay = temp_C;
-//		osMutexRelease(tempC_mutex);
 	} else if (getDisplayMode() == TILT_MODE) {
-//		osMutexWait(tilt_mutex, osWaitForever);
 		toDisplay = tilt;
-//		osMutexRelease(tilt_mutex);
 	}
-//	osMutexRelease(display_mutex);
 
 	// check if display should be flashing for overheat
-//	osMutexWait(flash_mutex, osWaitForever);
 	if (danger) {
 		dangerCount++;
 		if (dangerCount < 25) {
@@ -166,7 +132,6 @@ void Display7Segment(void const *argument){
 			dangerCount = 0;
 		}
 	}
-//	osMutexRelease(flash_mutex);
 		
 	Display(toDisplay);
 }
@@ -177,7 +142,6 @@ void DisplayLED(void const *argument){
 
 		if (counter < countUpTo){
 			// Turn LEDs on according to user input
-//			osMutexWait(LED_mutex, osWaitForever);
 			if (LEDnum == 1){
 				GPIO_SetBits(GPIOD, GPIO_Pin_12);
 				GPIO_ResetBits(GPIOD, GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15);
@@ -191,7 +155,6 @@ void DisplayLED(void const *argument){
 				GPIO_SetBits(GPIOD, GPIO_Pin_15);
 				GPIO_ResetBits(GPIOD, GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14);
 			}
-//			osMutexRelease(LED_mutex);
 			counter ++;
 		} else{
 		// Turn LEDs off based PWM...
@@ -221,13 +184,6 @@ int main (void) {
 	osTimerId display_timer;
 	osTimerId keypad_timer;
 	osTimerId led_timer;
-	
-	// Create the mutexes
-//	tempC_mutex = osMutexCreate(osMutex(MutexTemp));
-//	tilt_mutex = osMutexCreate(osMutex(MutexTilt));
-//	display_mutex = osMutexCreate(osMutex(MutexDisplay));
-//	flash_mutex = osMutexCreate(osMutex(MutexFlash));
-//	LED_mutex = osMutexCreate(osMutex(MutexLED));
 	
   // initialize peripherals here
 	
